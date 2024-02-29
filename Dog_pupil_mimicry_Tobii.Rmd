@@ -1,0 +1,189 @@
+---
+title: "Dog_pupil_mimicry_Tobii"
+author: "Lucrezia Lonardo"
+date: "2024-02-28"
+output: html_document
+---
+## Load packages
+```{r }
+#rm(list=ls())
+library(tidyverse)
+```
+
+## Load data
+
+```{r}
+#Load data with Tobii "Fixation" gaze filter
+
+all.data<-
+  read_tsv("./data/Dog_pupil_mimicry_28_02_2024_AOI_based_gazefilterfixation_incl_glances.tsv") %>% 
+  mutate(Recording=as.factor(Recording)) %>% 
+  mutate(Participant=as.factor(Participant)) %>% 
+  mutate(Timeline=as.factor(Timeline)) %>% 
+  filter(Recording!="Recording58" & Recording!="Recording60" & Recording!="Recording71" & Recording!="Recording107" & Recording!="Recording119" & Recording!="Recording172" & Recording!="Recording177" & Recording!="Recording175") # To be excluded (if not already excluded from project) as the whole sessions were collected again with lower data loss
+```
+
+
+```{r}
+#figure out which trials to filter out, because they were repeated with lower data loss
+which(all.data$Recording=="Recording51" & all.data$TOI=="h07-dilating")
+which(all.data$Recording=="Recording52" & all.data$TOI=="d03-dilating")
+which(all.data$Recording=="Recording140" & all.data$TOI=="d14-dilating")
+which(all.data$Recording=="Recording141" & all.data$TOI=="b11-constr")
+which(all.data$Recording=="Recording141" & all.data$TOI=="b10-dilating")
+which(all.data$Recording=="Recording87" & all.data$TOI=="b09-constr")
+which(all.data$Recording=="Recording87" & all.data$TOI=="h13-constr")
+which(all.data$Recording=="Recording87" & all.data$TOI=="h15-constr")
+which(all.data$Recording=="Recording87" & all.data$TOI=="b05-constr")
+which(all.data$Recording=="Recording88" & all.data$TOI=="b01-dilating")
+which(all.data$Recording=="Recording88" & all.data$TOI=="b03-constr")
+which(all.data$Recording=="Recording139" & all.data$TOI=="d03-constr")
+which(all.data$Recording=="Recording51" & all.data$TOI=="d14-dilating")
+
+
+
+all.data<-all.data %>%  filter(!row_number() %in% c(988, 956:957, 674:675, 682:683, 1154:1155, 1284))
+  
+
+all.data.toi<-all.data %>% 
+  filter(TOI!="Entire Recording") %>% 
+  droplevels() %>% 
+  mutate(condition=ifelse(grepl("constr", TOI), "constricting", ifelse(grepl("dilating", TOI), "dilating", "grey_screen")))
+```
+
+## Explore data
+
+```{r}
+str(all.data.toi)
+levels(as.factor(all.data.toi$Recording))
+table(all.data.toi$Participant, all.data.toi$Recording)
+levels(as.factor(all.data.toi$TOI))
+levels(as.factor(all.data.toi$Timeline))
+
+#check how many trials were collected with each dog
+all.data.toi.trials<-all.data.toi %>% 
+  filter(TOI!="grey_screen") %>% 
+#mutate(N_trials_collected=count(Participant)) alternative to what is below
+  group_by(Participant) %>% 
+  summarise(N_trials_collected=n())
+```
+##Individual checks on repetion of sessions
+
+####Kaije
+```{r}
+#check how many trials per dog
+all.data.toi.trials.kaije<-all.data.toi %>% 
+  filter(TOI!="grey_screen") %>% 
+  filter(Participant=="kaije") %>% 
+  droplevels()
+length(all.data.toi.trials.kaije$TOI) #Kaije has 95 trials (if > than actually collected, it means some sessions were repeated -> select the trials with lower data loss)
+
+levels(as.factor(all.data.toi.trials.kaije$TOI)) #which videos did the dog see?
+  #mutate(N_trials_collected=count(Participant))
+  # group_by(Participant) %>% 
+  # summarise(N_trials_collected=n())
+
+all.data.toi.trials.kaije$TOI
+#which trials are duplicates?
+which(duplicated(all.data.toi.trials.kaije$TOI)==TRUE)
+```
+
+#### Noodle
+```{r}
+#check how many trials per dog
+all.data.toi.trials.noodle<-all.data.toi %>% 
+  filter(TOI!="grey_screen") %>% 
+  filter(Participant=="Noodle") %>% 
+  droplevels()
+length(all.data.toi.trials.noodle$TOI) #Noodle has 84 trials (if more than actually collected, it means some sessions were repeated and I need to select the trials with lower data loss)
+
+#which videos did the dog see?
+levels(as.factor(all.data.toi.trials.noodle$TOI)) 
+
+# all.data.toi.trials.noodle$TOI
+# #which trials are duplicates?
+# which(duplicated(all.data.toi.trials.noodle$TOI)==TRUE)
+```
+#### Pepe
+```{r}
+#check how many trials per dog
+all.data.toi.trials.pepe<-all.data.toi %>% 
+  filter(TOI!="grey_screen") %>% 
+  filter(Participant=="Pepe") %>% 
+  droplevels()
+length(all.data.toi.trials.pepe$TOI) #Pepe has 42 trials (if more than actually collected, it means some sessions were repeated and I need to select the trials with lower data loss)
+
+#which videos did the dog see?
+levels(as.factor(all.data.toi.trials.pepe$TOI)) 
+
+```
+
+
+##calculate % tracked (i.e., detected) gaze for each trial. Using the data with the Tobii "Fixation" gaze filter and the Total duration of fixations
+```{r}
+tracked.gaze.data<-all.data.toi %>% 
+  filter(TOI!="grey_screen") %>% 
+  mutate(percent_tracked_gaze=(Total_duration_of_fixations/Duration_of_interval)*100)
+
+#potentially replace Total_duration_of_fixations with Total_duration_of_glances
+
+#only select relevant columns
+tracked.gaze.data.red<-tracked.gaze.data %>% 
+  select(c(Recording:Media, Average_pupil_diameter, Total_duration_of_Glances, condition, percent_tracked_gaze))
+  
+#Trials to be excluded
+
+tracked.gaze.data.red.to.be.excluded<-tracked.gaze.data.red %>% 
+group_by(Participant) %>% 
+summarise(percent_trials_excluded=sum(percent_tracked_gaze<50)/length(percent_tracked_gaze))
+```
+
+###check if there are repeated sessions, to only keep trials with higher % tracked gaze 
+```{r}
+#Kaije
+tracked.gaze.data.red.kaije<-tracked.gaze.data.red %>% 
+  filter(Participant==noodle)
+which(duplicated(tracked.gaze.data.red.kaije$TOI)==TRUE)
+
+#Noodle
+tracked.gaze.data.red.noodle<-tracked.gaze.data.red %>% 
+  filter(Participant=="Noodle")
+which(duplicated(tracked.gaze.data.red.noodle$TOI)==TRUE)
+
+#Pepe
+tracked.gaze.data.red.pepe<-tracked.gaze.data.red %>% 
+  filter(Participant=="Pepe")
+which(duplicated(tracked.gaze.data.red.noodle$TOI)==TRUE)
+```
+
+
+```{r}
+####check which trials should be repeated for each dog
+
+#Barney
+to.be.repeated.Barney<-tracked.gaze.data.red %>% 
+filter(percent_tracked_gaze<50) %>% 
+filter(Participant=="Barney")
+
+#Messi
+to.be.repeated.Messi<-tracked.gaze.data.red %>% 
+filter(percent_tracked_gaze<50) %>% 
+filter(Participant=="Messi")
+
+#Kaije
+to.be.repeated.Kaije<-tracked.gaze.data.red %>% 
+filter(percent_tracked_gaze<50) %>% 
+filter(Participant=="kaije")
+
+#Noodle
+to.be.repeated.Noodle<-tracked.gaze.data.red %>% 
+filter(percent_tracked_gaze<50) %>% 
+filter(Participant=="Noodle")
+
+#Pepe
+to.be.repeated.Pepe<-tracked.gaze.data.red %>% 
+filter(percent_tracked_gaze<50) %>% 
+filter(Participant=="Pepe")
+
+```
+
