@@ -26,6 +26,7 @@ all.data<-
 
 ```{r}
 #figure out which trials to filter out, because they were repeated with lower data loss
+which(all.data$Recording=="Recording51" & all.data$TOI=="d14-constr")
 which(all.data$Recording=="Recording51" & all.data$TOI=="h07-dilating")
 which(all.data$Recording=="Recording52" & all.data$TOI=="d03-dilating")
 which(all.data$Recording=="Recording140" & all.data$TOI=="d14-dilating")
@@ -38,11 +39,11 @@ which(all.data$Recording=="Recording87" & all.data$TOI=="b05-constr")
 which(all.data$Recording=="Recording88" & all.data$TOI=="b01-dilating")
 which(all.data$Recording=="Recording88" & all.data$TOI=="b03-constr")
 which(all.data$Recording=="Recording139" & all.data$TOI=="d03-constr")
-which(all.data$Recording=="Recording51" & all.data$TOI=="d14-dilating")
 
 
 
-all.data<-all.data %>%  filter(!row_number() %in% c(988, 956:957, 674:675, 682:683, 1154:1155, 1284))
+
+all.data<-all.data %>%  filter(!row_number() %in% c(467,471,750, 978, 946:947, 664:665, 672:673, 1134:1135, 1264))
   
 
 all.data.toi<-all.data %>% 
@@ -123,19 +124,33 @@ levels(as.factor(all.data.toi.trials.pepe$TOI))
 ```{r}
 tracked.gaze.data<-all.data.toi %>% 
   filter(TOI!="grey_screen") %>% 
-  mutate(percent_tracked_gaze=(Total_duration_of_fixations/Duration_of_interval)*100)
+  mutate(percent_tracked_gaze=(Total_duration_of_fixations/Duration_of_interval)*100) %>% 
+  mutate(percent_tracked_glances=(Total_duration_of_Glances/Duration_of_interval)*100)
 
-#potentially replace Total_duration_of_fixations with Total_duration_of_glances
+#using glances instead of fixations results in the gaze being detected for longer
+summary(tracked.gaze.data$percent_tracked_gaze)
+summary(tracked.gaze.data$percent_tracked_glances)
+sum(tracked.gaze.data$percent_tracked_gaze<tracked.gaze.data$percent_tracked_glances)
+sum(tracked.gaze.data$percent_tracked_gaze>tracked.gaze.data$percent_tracked_glances)
+sum(tracked.gaze.data$percent_tracked_gaze==tracked.gaze.data$percent_tracked_glances)
+
+#potentially replace Total_duration_of_fixations with Total_duration_of_Glances.
+#However for now I continue with fixations (the more conservative measure)
 
 #only select relevant columns
 tracked.gaze.data.red<-tracked.gaze.data %>% 
-  select(c(Recording:Media, Average_pupil_diameter, Total_duration_of_Glances, condition, percent_tracked_gaze))
+  select(c(Recording:Media, Average_pupil_diameter, Total_duration_of_Glances, condition, percent_tracked_gaze, percent_tracked_glances))
   
 #Trials to be excluded
-
+##gaze
 tracked.gaze.data.red.to.be.excluded<-tracked.gaze.data.red %>% 
 group_by(Participant) %>% 
 summarise(percent_trials_excluded=sum(percent_tracked_gaze<50)/length(percent_tracked_gaze))
+
+##glances
+tracked.glances.data.red.to.be.excluded<-tracked.gaze.data.red %>% 
+group_by(Participant) %>% 
+summarise(percent_trials_excluded=sum(percent_tracked_glances<50)/length(percent_tracked_glances))
 ```
 
 ###check if there are repeated sessions, to only keep trials with higher % tracked gaze 
