@@ -20,19 +20,19 @@ all.data<-
   mutate(Recording=as.factor(Recording)) %>% 
   mutate(Participant=as.factor(Participant)) %>% 
   mutate(Timeline=as.factor(Timeline)) %>% 
-  filter(Recording!="Recording58" & Recording!="Recording60" & Recording!="Recording71" & Recording!="Recording107" & Recording!="Recording119" & Recording!="Recording172" & Recording!="Recording177" & Recording!="Recording175") # To be excluded (if not already excluded from project) as the whole sessions were collected again with lower data loss
+  filter(Recording!="Recording56" & Recording!="Recording58" & Recording!="Recording60" & Recording!="Recording71" & Recording!="Recording107" & Recording!="Recording119" & Recording!="Recording156" & Recording!="Recording158" & Recording!="Recording160" & Recording!="Recording165" &  Recording!="Recording170" & Recording!="Recording172" & Recording!="Recording177" & Recording!="Recording175") # To be excluded (if not already excluded from project) as the whole sessions were collected again with lower data loss
 ```
 
 
 ```{r}
 #Load raw data
 
-# all.data<-
-#   read_tsv("./data/Dog_pupil_mimicry_01_03_2024_AOI_based_raw_data.tsv") %>% 
-#   mutate(Recording=as.factor(Recording)) %>% 
-#   mutate(Participant=as.factor(Participant)) %>% 
-#   mutate(Timeline=as.factor(Timeline)) %>% 
-#   filter(Recording!="Recording58" & Recording!="Recording60" & Recording!="Recording71" & Recording!="Recording107" & Recording!="Recording119" & Recording!="Recording172" & Recording!="Recording177" & Recording!="Recording175") # To be excluded (if not already excluded from project) as the whole sessions were collected again with lower data loss
+all.data<-
+  read_tsv("./data/Dog_pupil_mimicry_01_03_2024_AOI_based_raw_data.tsv") %>%
+  mutate(Recording=as.factor(Recording)) %>%
+  mutate(Participant=as.factor(Participant)) %>%
+  mutate(Timeline=as.factor(Timeline)) %>%
+  filter(Recording!="Recording56" & Recording!="Recording58" & Recording!="Recording60" & Recording!="Recording71" & Recording!="Recording107" & Recording!="Recording119" & Recording!="Recording156" & Recording!="Recording158" & Recording!="Recording160" & Recording!="Recording165" &  Recording!="Recording170" &  Recording!="Recording172" & Recording!="Recording177" & Recording!="Recording175") # To be excluded (if not already excluded from project) as the whole sessions were collected again with lower data loss
 ```
 
 
@@ -51,12 +51,12 @@ which(all.data$Recording=="Recording87" & all.data$TOI=="h15-constr"),
 which(all.data$Recording=="Recording87" & all.data$TOI=="b05-constr"),
 which(all.data$Recording=="Recording88" & all.data$TOI=="b01-dilating"),
 which(all.data$Recording=="Recording88" & all.data$TOI=="b03-constr"),
-which(all.data$Recording=="Recording139" & all.data$TOI=="d03-constr"))
+which(all.data$Recording=="Recording139" & all.data$TOI=="d03-constr"),
+which(all.data$Recording=="Recording159" & all.data$TOI=="b06-constr"),
+which(all.data$Recording=="Recording214" & (all.data$TOI=="h06-dilating" | all.data$TOI=="b03-dilating")))
 
 
 all.data<-all.data %>%  filter(!row_number() %in% trials.to.exclude)
-
-# all.data<-all.data %>%  filter(!row_number() %in% c(467,471,750, 978, 946:947, 664:665, 672:673, 1134:1135, 1264))
   
 
 all.data.toi<-all.data %>% 
@@ -109,7 +109,7 @@ all.data.toi.trials.noodle<-all.data.toi %>%
   filter(TOI!="grey_screen") %>% 
   filter(Participant=="Noodle") %>% 
   droplevels()
-length(all.data.toi.trials.noodle$TOI) #Noodle has 84 trials (if more than actually collected, it means some sessions were repeated and I need to select the trials with lower data loss)
+length(all.data.toi.trials.noodle$TOI) #Noodle has 93 trials (if more than actually collected, it means some sessions were repeated and I need to select the trials with lower data loss)
 
 #which videos did the dog see?
 levels(as.factor(all.data.toi.trials.noodle$TOI)) 
@@ -182,6 +182,16 @@ which(duplicated(tracked.gaze.data.red.noodle$TOI)==TRUE)
 tracked.gaze.data.red.pepe<-tracked.gaze.data.red %>% 
   filter(Participant=="Pepe")
 which(duplicated(tracked.gaze.data.red.pepe$TOI)==TRUE)
+
+#Messi
+tracked.gaze.data.red.messi<-tracked.gaze.data.red %>% 
+  filter(Participant=="Messi")
+which(duplicated(tracked.gaze.data.red.messi$TOI)==TRUE)
+
+#Barney
+tracked.gaze.data.red.barney<-tracked.gaze.data.red %>% 
+  filter(Participant=="Barney")
+which(duplicated(tracked.gaze.data.red.barney$TOI)==TRUE)
 ```
 
 
