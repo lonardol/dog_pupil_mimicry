@@ -25,25 +25,38 @@ all.data<-
 
 
 ```{r}
+#Load raw data
+
+# all.data<-
+#   read_tsv("./data/Dog_pupil_mimicry_28_02_2024_AOI_based_raw_data.tsv") %>% 
+#   mutate(Recording=as.factor(Recording)) %>% 
+#   mutate(Participant=as.factor(Participant)) %>% 
+#   mutate(Timeline=as.factor(Timeline)) %>% 
+#   filter(Recording!="Recording58" & Recording!="Recording60" & Recording!="Recording71" & Recording!="Recording107" & Recording!="Recording119" & Recording!="Recording172" & Recording!="Recording177" & Recording!="Recording175") # To be excluded (if not already excluded from project) as the whole sessions were collected again with lower data loss
+```
+
+
+```{r}
 #figure out which trials to filter out, because they were repeated with lower data loss
-which(all.data$Recording=="Recording51" & all.data$TOI=="d14-constr")
-which(all.data$Recording=="Recording51" & all.data$TOI=="h07-dilating")
-which(all.data$Recording=="Recording52" & all.data$TOI=="d03-dilating")
-which(all.data$Recording=="Recording140" & all.data$TOI=="d14-dilating")
-which(all.data$Recording=="Recording141" & all.data$TOI=="b11-constr")
-which(all.data$Recording=="Recording141" & all.data$TOI=="b10-dilating")
-which(all.data$Recording=="Recording87" & all.data$TOI=="b09-constr")
-which(all.data$Recording=="Recording87" & all.data$TOI=="h13-constr")
-which(all.data$Recording=="Recording87" & all.data$TOI=="h15-constr")
-which(all.data$Recording=="Recording87" & all.data$TOI=="b05-constr")
-which(all.data$Recording=="Recording88" & all.data$TOI=="b01-dilating")
-which(all.data$Recording=="Recording88" & all.data$TOI=="b03-constr")
-which(all.data$Recording=="Recording139" & all.data$TOI=="d03-constr")
+trials.to.exclude<-c( 
+which(all.data$Recording=="Recording51" & all.data$TOI=="d14-constr"),
+which(all.data$Recording=="Recording51" & all.data$TOI=="h07-dilating"),
+which(all.data$Recording=="Recording52" & all.data$TOI=="d03-dilating"),
+which(all.data$Recording=="Recording140" & all.data$TOI=="d14-dilating"),
+which(all.data$Recording=="Recording141" & all.data$TOI=="b11-constr"),
+which(all.data$Recording=="Recording141" & all.data$TOI=="b10-dilating"),
+which(all.data$Recording=="Recording87" & all.data$TOI=="b09-constr"),
+which(all.data$Recording=="Recording87" & all.data$TOI=="h13-constr"),
+which(all.data$Recording=="Recording87" & all.data$TOI=="h15-constr"),
+which(all.data$Recording=="Recording87" & all.data$TOI=="b05-constr"),
+which(all.data$Recording=="Recording88" & all.data$TOI=="b01-dilating"),
+which(all.data$Recording=="Recording88" & all.data$TOI=="b03-constr"),
+which(all.data$Recording=="Recording139" & all.data$TOI=="d03-constr"))
 
 
+all.data<-all.data %>%  filter(!row_number() %in% trials.to.exclude)
 
-
-all.data<-all.data %>%  filter(!row_number() %in% c(467,471,750, 978, 946:947, 664:665, 672:673, 1134:1135, 1264))
+# all.data<-all.data %>%  filter(!row_number() %in% c(467,471,750, 978, 946:947, 664:665, 672:673, 1134:1135, 1264))
   
 
 all.data.toi<-all.data %>% 
@@ -157,7 +170,7 @@ summarise(percent_trials_excluded=sum(percent_tracked_glances<50)/length(percent
 ```{r}
 #Kaije
 tracked.gaze.data.red.kaije<-tracked.gaze.data.red %>% 
-  filter(Participant==noodle)
+  filter(Participant=="kaije")
 which(duplicated(tracked.gaze.data.red.kaije$TOI)==TRUE)
 
 #Noodle
@@ -168,7 +181,7 @@ which(duplicated(tracked.gaze.data.red.noodle$TOI)==TRUE)
 #Pepe
 tracked.gaze.data.red.pepe<-tracked.gaze.data.red %>% 
   filter(Participant=="Pepe")
-which(duplicated(tracked.gaze.data.red.noodle$TOI)==TRUE)
+which(duplicated(tracked.gaze.data.red.pepe$TOI)==TRUE)
 ```
 
 
