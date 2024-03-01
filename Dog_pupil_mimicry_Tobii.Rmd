@@ -16,7 +16,7 @@ library(tidyverse)
 #Load data with Tobii "Fixation" gaze filter
 
 all.data<-
-  read_tsv("./data/Dog_pupil_mimicry_28_02_2024_AOI_based_gazefilterfixation_incl_glances.tsv") %>% 
+  read_tsv("./data/Dog_pupil_mimicry_01_03_2024_AOI_based_gazefilterfixation_incl_glances.tsv") %>% 
   mutate(Recording=as.factor(Recording)) %>% 
   mutate(Participant=as.factor(Participant)) %>% 
   mutate(Timeline=as.factor(Timeline)) %>% 
@@ -28,7 +28,7 @@ all.data<-
 #Load raw data
 
 # all.data<-
-#   read_tsv("./data/Dog_pupil_mimicry_28_02_2024_AOI_based_raw_data.tsv") %>% 
+#   read_tsv("./data/Dog_pupil_mimicry_01_03_2024_AOI_based_raw_data.tsv") %>% 
 #   mutate(Recording=as.factor(Recording)) %>% 
 #   mutate(Participant=as.factor(Participant)) %>% 
 #   mutate(Timeline=as.factor(Timeline)) %>% 
