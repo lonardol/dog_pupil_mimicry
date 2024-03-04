@@ -131,7 +131,19 @@ length(all.data.toi.trials.pepe$TOI) #Pepe has 42 trials (if more than actually 
 levels(as.factor(all.data.toi.trials.pepe$TOI)) 
 
 ```
+#### Barney
+```{r}
+#check how many trials per dog
+all.data.toi.trials.barney<-all.data.toi %>% 
+  filter(TOI!="grey_screen") %>% 
+  filter(Participant=="Barney") %>% 
+  droplevels()
+length(all.data.toi.trials.barney$TOI) #Barney has 71 trials (if more than actually collected, it means some sessions were repeated and I need to select the trials with lower data loss)
 
+#which videos did the dog see?
+levels(as.factor(all.data.toi.trials.barney$TOI)) 
+
+```
 
 ##calculate % tracked (i.e., detected) gaze for each trial. Using the data with the Tobii "Fixation" gaze filter and the Total duration of fixations
 ```{r}
