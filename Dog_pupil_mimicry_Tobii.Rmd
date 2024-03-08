@@ -6,7 +6,7 @@ output: html_document
 ---
 ## Load packages
 ```{r }
-#rm(list=ls())
+rm(list=ls())
 library(tidyverse)
 ```
 
@@ -16,25 +16,12 @@ library(tidyverse)
 #Load data with Tobii "Fixation" gaze filter
 
 all.data<-
-  read_tsv("./data/Dog_pupil_mimicry_01_03_2024_AOI_based_gazefilterfixation_incl_glances.tsv") %>% 
+  read_tsv("./data/Dog_pupil_mimicry_08_03_2024_AOI_based_gazefilterfixation_incl_glances.tsv") %>% 
   mutate(Recording=as.factor(Recording)) %>% 
   mutate(Participant=as.factor(Participant)) %>% 
   mutate(Timeline=as.factor(Timeline)) %>% 
-  filter(Recording!="Recording56" & Recording!="Recording58" & Recording!="Recording60" & Recording!="Recording71" & Recording!="Recording107" & Recording!="Recording119" & Recording!="Recording156" & Recording!="Recording158" & Recording!="Recording160" & Recording!="Recording165" &  Recording!="Recording170" & Recording!="Recording172" & Recording!="Recording177" & Recording!="Recording175") # To be excluded (if not already excluded from project) as the whole sessions were collected again with lower data loss
+  filter(Recording!="Recording48" & Recording!="Recording55" & Recording!="Recording56" & Recording!="Recording57" & Recording!="Recording58" & Recording!="Recording60" & Recording!="Recording71" & Recording!="Recording72" & Recording!="Recording74" & Recording!="Recording78" & Recording!="Recording80" & Recording!="Recording81" & Recording!="Recording107" & Recording!="Recording119" & Recording!="Recording131" & Recording!="Recording156" & Recording!="Recording158" & Recording!="Recording160" & Recording!="Recording161" & Recording!="Recording165" &  Recording!="Recording170" & Recording!="Recording172" & Recording!="Recording175" & Recording!="Recording177" & Recording!="Recording180" &  Recording!="Recording231" & Recording!="Recording251" & Recording!="Recording259" & Recording!="Recording260") # Sessions to be excluded (if not already excluded from project) as they were collected again with lower data loss
 ```
-
-
-```{r}
-#Load raw data
-
-all.data<-
-  read_tsv("./data/Dog_pupil_mimicry_01_03_2024_AOI_based_raw_data.tsv") %>%
-  mutate(Recording=as.factor(Recording)) %>%
-  mutate(Participant=as.factor(Participant)) %>%
-  mutate(Timeline=as.factor(Timeline)) %>%
-  filter(Recording!="Recording56" & Recording!="Recording58" & Recording!="Recording60" & Recording!="Recording71" & Recording!="Recording107" & Recording!="Recording119" & Recording!="Recording156" & Recording!="Recording158" & Recording!="Recording160" & Recording!="Recording165" &  Recording!="Recording170" &  Recording!="Recording172" & Recording!="Recording177" & Recording!="Recording175") # To be excluded (if not already excluded from project) as the whole sessions were collected again with lower data loss
-```
-
 
 ```{r}
 #figure out which trials to filter out, because they were repeated with lower data loss
@@ -42,9 +29,11 @@ trials.to.exclude<-c(
 which(all.data$Recording=="Recording51" & all.data$TOI=="d14-constr"),
 which(all.data$Recording=="Recording51" & all.data$TOI=="h07-dilating"),
 which(all.data$Recording=="Recording52" & all.data$TOI=="d03-dilating"),
+which(all.data$Recording=="Recording116" & all.data$TOI=="h14-constr"),
 which(all.data$Recording=="Recording140" & all.data$TOI=="d14-dilating"),
 which(all.data$Recording=="Recording141" & all.data$TOI=="b11-constr"),
 which(all.data$Recording=="Recording141" & all.data$TOI=="b10-dilating"),
+which(all.data$Recording=="Recording86" & all.data$TOI=="d03-constr"),
 which(all.data$Recording=="Recording87" & all.data$TOI=="b09-constr"),
 which(all.data$Recording=="Recording87" & all.data$TOI=="h13-constr"),
 which(all.data$Recording=="Recording87" & all.data$TOI=="h15-constr"),
@@ -53,7 +42,54 @@ which(all.data$Recording=="Recording88" & all.data$TOI=="b01-dilating"),
 which(all.data$Recording=="Recording88" & all.data$TOI=="b03-constr"),
 which(all.data$Recording=="Recording139" & all.data$TOI=="d03-constr"),
 which(all.data$Recording=="Recording159" & all.data$TOI=="b06-constr"),
-which(all.data$Recording=="Recording214" & (all.data$TOI=="h06-dilating" | all.data$TOI=="b03-dilating")))
+which(all.data$Recording=="Recording116" & all.data$TOI=="h14-constr"),
+which(all.data$Recording=="Recording181" & all.data$TOI=="b02-constr"),
+which(all.data$Recording=="Recording181" & all.data$TOI=="h13-dilating"),
+which(all.data$Recording=="Recording265" & all.data$TOI=="d08-dilating"),
+which(all.data$Recording=="Recording265" & all.data$TOI=="b05-constr"),
+which(all.data$Recording=="Recording265" & all.data$TOI=="h07-constr"),
+which(all.data$Recording=="Recording267" & (all.data$TOI=="h06-dilating" | all.data$TOI=="b03-dilating")),
+which(all.data$Recording=="Recording256" & (all.data$TOI=="h09-dilating" | all.data$TOI=="h15-dilating")),
+which(all.data$Recording=="Recording254" & (all.data$TOI=="h09-dilating" | 
+all.data$TOI=="h09-constr")),
+which(all.data$Recording=="Recording218" & (all.data$TOI=="h09-constr" | 
+all.data$TOI=="h15-dilating")),
+which(all.data$Recording=="Recording252" & (all.data$TOI=="b03-constr" | 
+all.data$TOI=="d15-dilating")),
+which(all.data$Recording=="Recording246" & all.data$TOI=="h02-dilating"),
+which(all.data$Recording=="Recording166" & (all.data$TOI=="b14-dilating" | 
+all.data$TOI=="d11-constr")),
+which(all.data$Recording=="Recording253" & all.data$TOI=="d01-constr"),
+which(all.data$Recording=="Recording220" & (all.data$TOI=="b05-dilating" | 
+all.data$TOI=="h10-dilating")),
+which(all.data$Recording=="Recording257" & all.data$TOI=="d12-constr"),
+which(all.data$Recording=="Recording255" & (all.data$TOI=="d07-constr" | 
+all.data$TOI=="d12-dilating")),
+which(all.data$Recording=="Recording219" & all.data$TOI=="h12-constr"),
+which(all.data$Recording=="Recording247" & (all.data$TOI=="b02-constr" | 
+all.data$TOI=="d03-constr")),
+which(all.data$Recording=="Recording53" & all.data$TOI=="h08-dilating"),
+which(all.data$Recording=="Recording242" & (all.data$TOI=="d04-dilating" | all.data$TOI=="b07-dilating"| all.data$TOI=="d14-constr"| all.data$TOI=="d15-constr"| all.data$TOI=="h05-constr")),
+which(all.data$Recording=="Recording133" & all.data$TOI=="h11-constr"),
+which(all.data$Recording=="Recording204" & (all.data$TOI=="b13-constr" | 
+all.data$TOI=="h08-constr")),
+which(all.data$Recording=="Recording243" & all.data$TOI=="d04-constr"),
+which(all.data$Recording=="Recording228" & (all.data$TOI=="h00-constr" | 
+all.data$TOI=="h10-constr")),
+which(all.data$Recording=="Recording229" & all.data$TOI=="h15-constr"),
+which((all.data$Recording=="Recording61"| all.data$Recording=="Recording267") & all.data$TOI=="b03-dilating"),
+which((all.data$Recording=="Recording86"| all.data$Recording=="Recording266") & all.data$TOI=="d03-constr"),
+which((all.data$Recording=="Recording266"| all.data$Recording=="Recording142"| all.data$Recording=="Recording267") & all.data$TOI=="d13-constr"),
+which((all.data$Recording=="Recording266"| all.data$Recording=="Recording267") & all.data$TOI=="h06-dilating"),
+which((all.data$Recording=="Recording148"| all.data$Recording=="Recording266") & all.data$TOI=="h08-constr"),
+which((all.data$Recording=="Recording263"| all.data$Recording=="Recording266"| all.data$Recording=="Recording142") & all.data$TOI=="h11-constr"),
+which(all.data$Recording=="Recording142" & (all.data$TOI=="d02-dilating" | all.data$TOI=="d13-constr"| all.data$TOI=="h11-constr")),
+which(all.data$Recording=="Recording263" & (all.data$TOI=="b07-dilating" | all.data$TOI=="b09-dilating"| all.data$TOI=="b11-dilating")),
+which(all.data$Recording=="Recording264" & (all.data$TOI=="b01-constr" | 
+all.data$TOI=="b04-constr")),
+which(all.data$Recording=="Recording261" & (all.data$TOI=="d02-constr" | all.data$TOI=="d12-constr"| all.data$TOI=="h14-dilating"| all.data$TOI=="d14-constr")),
+which(all.data$Recording=="Recording146" & (all.data$TOI=="b07-constr" | 
+all.data$TOI=="d05-constr")))
 
 
 all.data<-all.data %>%  filter(!row_number() %in% trials.to.exclude)
@@ -81,10 +117,10 @@ all.data.toi.trials<-all.data.toi %>%
   group_by(Participant) %>% 
   summarise(N_trials_collected=n())
 ```
-##Individual checks on repetion of sessions
 
-####Kaije
+##Individual checks on repetion of sessions
 ```{r}
+####Kaije
 #check how many trials per dog
 all.data.toi.trials.kaije<-all.data.toi %>% 
   filter(TOI!="grey_screen") %>% 
@@ -100,26 +136,20 @@ levels(as.factor(all.data.toi.trials.kaije$TOI)) #which videos did the dog see?
 all.data.toi.trials.kaije$TOI
 #which trials are duplicates?
 which(duplicated(all.data.toi.trials.kaije$TOI)==TRUE)
-```
 
 #### Noodle
-```{r}
 #check how many trials per dog
 all.data.toi.trials.noodle<-all.data.toi %>% 
   filter(TOI!="grey_screen") %>% 
   filter(Participant=="Noodle") %>% 
   droplevels()
-length(all.data.toi.trials.noodle$TOI) #Noodle has 93 trials (if more than actually collected, it means some sessions were repeated and I need to select the trials with lower data loss)
+length(all.data.toi.trials.noodle$TOI) #Noodle has 96 trials (if more than actually collected, it means some sessions were repeated and I need to select the trials with lower data loss)
 
 #which videos did the dog see?
 levels(as.factor(all.data.toi.trials.noodle$TOI)) 
 
-# all.data.toi.trials.noodle$TOI
-# #which trials are duplicates?
-# which(duplicated(all.data.toi.trials.noodle$TOI)==TRUE)
-```
+
 #### Pepe
-```{r}
 #check how many trials per dog
 all.data.toi.trials.pepe<-all.data.toi %>% 
   filter(TOI!="grey_screen") %>% 
@@ -130,19 +160,17 @@ length(all.data.toi.trials.pepe$TOI) #Pepe has 42 trials (if more than actually 
 #which videos did the dog see?
 levels(as.factor(all.data.toi.trials.pepe$TOI)) 
 
-```
+
 #### Barney
-```{r}
 #check how many trials per dog
 all.data.toi.trials.barney<-all.data.toi %>% 
   filter(TOI!="grey_screen") %>% 
   filter(Participant=="Barney") %>% 
   droplevels()
-length(all.data.toi.trials.barney$TOI) #Barney has 71 trials (if more than actually collected, it means some sessions were repeated and I need to select the trials with lower data loss)
+length(all.data.toi.trials.barney$TOI) #Barney has 96 trials (if more than actually collected, it means some sessions were repeated and I need to select the trials with lower data loss)
 
 #which videos did the dog see?
 levels(as.factor(all.data.toi.trials.barney$TOI)) 
-
 ```
 
 ##calculate % tracked (i.e., detected) gaze for each trial. Using the data with the Tobii "Fixation" gaze filter and the Total duration of fixations
