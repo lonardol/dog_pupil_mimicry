@@ -13,7 +13,7 @@ library(tidyverse)
 ## Load data
 
 ```{r}
-#Load data with Tobii "Fixation" gaze filter
+#Load data with Tobii "Fixation" gaze filter and pupil "noise reduction" filter
 
 all.data<-
   read_tsv("./data/Dog_pupil_mimicry_08_03_2024_AOI_based_gazefilterfixation_incl_glances.tsv") %>% 
@@ -48,6 +48,7 @@ which(all.data$Recording=="Recording181" & all.data$TOI=="h13-dilating"),
 which(all.data$Recording=="Recording265" & all.data$TOI=="d08-dilating"),
 which(all.data$Recording=="Recording265" & all.data$TOI=="b05-constr"),
 which(all.data$Recording=="Recording265" & all.data$TOI=="h07-constr"),
+which(all.data$Recording=="Recording214" & (all.data$TOI=="h06-dilating" | all.data$TOI=="b03-dilating")),
 which(all.data$Recording=="Recording267" & (all.data$TOI=="h06-dilating" | all.data$TOI=="b03-dilating")),
 which(all.data$Recording=="Recording256" & (all.data$TOI=="h09-dilating" | all.data$TOI=="h15-dilating")),
 which(all.data$Recording=="Recording254" & (all.data$TOI=="h09-dilating" | 
@@ -118,7 +119,7 @@ all.data.toi.trials<-all.data.toi %>%
   summarise(N_trials_collected=n())
 ```
 
-##Individual checks on repetion of sessions
+##Individual checks to see if there are repeated trials
 ```{r}
 ####Kaije
 #check how many trials per dog
