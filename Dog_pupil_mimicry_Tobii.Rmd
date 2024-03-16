@@ -16,11 +16,11 @@ library(tidyverse)
 #Load data with Tobii "Fixation" gaze filter and pupil "noise reduction" filter
 
 all.data<-
-  read_tsv("./data/Dog_pupil_mimicry_12_03_2024_AOI_based_gazefilterfixation_incl_glances.tsv") %>% 
+  read_tsv("./data/Dog_pupil_mimicry_15_03_2024_AOI_based_gazefilterfixation_incl_glances.tsv") %>% 
   mutate(Recording=as.factor(Recording)) %>% 
   mutate(Participant=as.factor(Participant)) %>% 
   mutate(Timeline=as.factor(Timeline)) %>% 
-  filter(Recording!="Recording48" & Recording!="Recording55" & Recording!="Recording56" & Recording!="Recording57" & Recording!="Recording58" & Recording!="Recording60" & Recording!="Recording71" & Recording!="Recording72" & Recording!="Recording74" & Recording!="Recording78" & Recording!="Recording80" & Recording!="Recording81" & Recording!="Recording107" & Recording!="Recording108" & Recording!="Recording109" & Recording!="Recording119" & Recording!="Recording131" & Recording!="Recording156" & Recording!="Recording158" & Recording!="Recording160" & Recording!="Recording161" & Recording!="Recording162" & Recording!="Recording164" & Recording!="Recording165" &  Recording!="Recording170" & Recording!="Recording172" & Recording!="Recording175" & Recording!="Recording177" & Recording!="Recording180" & Recording!="Recording221" &  Recording!="Recording231" & Recording!="Recording248" & Recording!="Recording251" & Recording!="Recording259" & Recording!="Recording260") # Sessions to be excluded (if not already excluded from project) as they were collected again with lower data loss
+  filter(Recording!="Recording48" & Recording!="Recording55" & Recording!="Recording56" & Recording!="Recording57" & Recording!="Recording58" & Recording!="Recording60" & Recording!="Recording71" & Recording!="Recording72" & Recording!="Recording74" & Recording!="Recording75" & Recording!="Recording77" & Recording!="Recording78" & Recording!="Recording80" & Recording!="Recording81" & Recording!="Recording107" & Recording!="Recording108" & Recording!="Recording109" & Recording!="Recording119" & Recording!="Recording124" & Recording!="Recording125" & Recording!="Recording126" & Recording!="Recording127" & Recording!="Recording128" & Recording!="Recording131" & Recording!="Recording156" & Recording!="Recording158" & Recording!="Recording160" & Recording!="Recording161" & Recording!="Recording162" & Recording!="Recording164" & Recording!="Recording165" &  Recording!="Recording170" & Recording!="Recording172" & Recording!="Recording175" & Recording!="Recording177" & Recording!="Recording180" & Recording!="Recording189" & Recording!="Recording221" &  Recording!="Recording231" & Recording!="Recording248" & Recording!="Recording251" & Recording!="Recording252" & Recording!="Recording259" & Recording!="Recording260" & Recording!="Recording305" ) # Sessions to be excluded (if not already excluded from project) as they were collected again with lower data loss
 ```
 
 ```{r}
@@ -65,6 +65,7 @@ which(all.data$Recording=="Recording273" & all.data$TOI=="b02-constr"),
 which(all.data$Recording=="Recording53" & all.data$TOI=="d03-constr"),
 which(all.data$Recording=="Recording157" & all.data$TOI=="d04-constr"),
 which(all.data$Recording=="Recording166" & all.data$TOI=="d01-constr"),
+which(all.data$Recording=="Recording191" & all.data$TOI=="b14-constr"),
 which(all.data$Recording=="Recording275" & all.data$TOI=="d00-constr"),
 which(all.data$Recording=="Recording287" & all.data$TOI=="b10-dilating"),
 which(all.data$Recording=="Recording212" & all.data$TOI=="b14-constr"),
@@ -76,19 +77,50 @@ which(all.data$Recording=="Recording206" & all.data$TOI=="h13-dilating"),
 which(all.data$Recording=="Recording204" & all.data$TOI=="d04-constr"),
 which(all.data$Recording=="Recording295" & all.data$TOI=="h13-constr"),
 which(all.data$Recording=="Recording292" & all.data$TOI=="h14-dilating"),
+which(all.data$Recording=="Recording303" & all.data$TOI=="h10-dilating"),
+which(all.data$Recording=="Recording215" & all.data$TOI=="d11-dilating"),
+which(all.data$Recording=="Recording330" & all.data$TOI=="b14-constr"),
+which(all.data$Recording=="Recording325" & all.data$TOI=="b13-dilating"),
+which(all.data$Recording=="Recording322" & all.data$TOI=="d13-dilating"),
+which(all.data$Recording=="Recording169" & all.data$TOI=="d05-dilating"),
+which(all.data$Recording=="Recording322" & all.data$TOI=="h15-constr"),
+which(all.data$Recording=="Recording273" & all.data$TOI=="d03-constr"),
+which(all.data$Recording=="Recording285" & all.data$TOI=="h03-dilating"),
+which(all.data$Recording=="Recording286" & all.data$TOI=="d02-constr"),
+which(all.data$Recording=="Recording289" & all.data$TOI=="h02-constr"),
+which(all.data$Recording=="Recording321" & all.data$TOI=="d12-dilating"),
+which(all.data$Recording=="Recording329" & all.data$TOI=="d00-constr"),
+which(all.data$Recording=="Recording282" & all.data$TOI=="d13-constr"),
+which(all.data$Recording=="Recording322" & all.data$TOI=="h01-constr"),
+which(all.data$Recording=="Recording318" & (all.data$TOI=="h08-dilating" | 
+all.data$TOI=="b02-constr")),
+which(all.data$Recording=="Recording321" & (all.data$TOI=="d01-dilating"| 
+all.data$TOI=="b08-dilating")),
+which(all.data$Recording=="Recording326" & (all.data$TOI=="b11-dilating"| 
+all.data$TOI=="h05-constr")),
+which(all.data$Recording=="Recording327" & (all.data$TOI=="h06-constr" |
+all.data$TOI=="d07-constr")),
+which(all.data$Recording=="Recording328" & (all.data$TOI=="b11-constr"| 
+all.data$TOI=="d00-dilating")),
+which(all.data$Recording=="Recording329" & (all.data$TOI=="b08-constr"| 
+all.data$TOI=="h03-constr")),
+which(all.data$Recording=="Recording330" & (all.data$TOI=="b09-dilating"| 
+all.data$TOI=="b10-dilating")),
+which(all.data$Recording=="Recording331" & (all.data$TOI=="d07-dilating"| 
+all.data$TOI=="d10-constr")),
 which(all.data$Recording=="Recording290" & (all.data$TOI=="h03-constr"| 
 all.data$TOI=="d14-constr")),
 which(all.data$Recording=="Recording207" & (all.data$TOI=="b08-constr"| 
 all.data$TOI=="b11-dilating")),
 which(all.data$Recording=="Recording214" & (all.data$TOI=="h06-dilating" | all.data$TOI=="b03-dilating")),
 which(all.data$Recording=="Recording267" & (all.data$TOI=="h06-dilating" | all.data$TOI=="b03-dilating")),
+which(all.data$Recording=="Recording288" & (all.data$TOI=="d10-dilating" | 
+all.data$TOI=="b05-constr")),
 which(all.data$Recording=="Recording256" & (all.data$TOI=="h09-dilating" | all.data$TOI=="h15-dilating")),
 which(all.data$Recording=="Recording254" & (all.data$TOI=="h09-dilating" | 
 all.data$TOI=="h09-constr")),
 which(all.data$Recording=="Recording218" & (all.data$TOI=="h09-constr" | 
 all.data$TOI=="h15-dilating")),
-which(all.data$Recording=="Recording252" & (all.data$TOI=="b03-constr" | 
-all.data$TOI=="d15-dilating")),
 which(all.data$Recording=="Recording246" & all.data$TOI=="h02-dilating"),
 which(all.data$Recording=="Recording166" & (all.data$TOI=="b14-dilating" | 
 all.data$TOI=="d11-constr")),
@@ -101,10 +133,13 @@ all.data$TOI=="d12-dilating")),
 which(all.data$Recording=="Recording219" & all.data$TOI=="h12-constr"),
 which(all.data$Recording=="Recording247" & (all.data$TOI=="b02-constr" | 
 all.data$TOI=="d03-constr")),
+which(all.data$Recording=="Recording304" & (all.data$TOI=="d01-constr"| 
+all.data$TOI=="d12-constr")),
 which(all.data$Recording=="Recording53" & all.data$TOI=="h08-dilating"),
 which(all.data$Recording=="Recording242" & (all.data$TOI=="d04-dilating" | all.data$TOI=="b07-dilating"| all.data$TOI=="d14-constr"| all.data$TOI=="d15-constr"| all.data$TOI=="h05-constr")),
 which(all.data$Recording=="Recording241" & (all.data$TOI=="b06-dilating" | all.data$TOI=="b15-dilating"| all.data$TOI=="b01-constr"| all.data$TOI=="b12-constr"| all.data$TOI=="h01-dilating")),
 which(all.data$Recording=="Recording240" & (all.data$TOI=="d02-dilating" | all.data$TOI=="d09-dilating"| all.data$TOI=="h12-constr")),
+which(all.data$Recording=="Recording324" & (all.data$TOI=="b01-constr" | all.data$TOI=="d05-constr"| all.data$TOI=="h08-constr")),
 which(all.data$Recording=="Recording133" & all.data$TOI=="h11-constr"),
 which(all.data$Recording=="Recording204" & (all.data$TOI=="b13-constr" | 
 all.data$TOI=="h08-constr")),
@@ -112,7 +147,11 @@ which(all.data$Recording=="Recording243" & all.data$TOI=="d04-constr"),
 which(all.data$Recording=="Recording228" & (all.data$TOI=="h00-constr" | 
 all.data$TOI=="h10-constr")),
 which(all.data$Recording=="Recording229" & all.data$TOI=="h15-constr"),
-which((all.data$Recording=="Recording61"| all.data$Recording=="Recording267") & all.data$TOI=="b03-dilating"),
+which((all.data$Recording=="Recording54"| all.data$Recording=="Recording327") & all.data$TOI=="d06-constr"),
+which((all.data$Recording=="Recording54"| all.data$Recording=="Recording327") & all.data$TOI=="d06-constr"),
+which((all.data$Recording=="Recording279"| all.data$Recording=="Recording322") & all.data$TOI=="h15-constr"),
+which((all.data$Recording=="Recording325"| all.data$Recording=="Recording352") & all.data$TOI=="h02-dilating"),
+which((all.data$Recording=="Recording325"| all.data$Recording=="Recording323") & all.data$TOI=="b03-constr"),
 which((all.data$Recording=="Recording86"| all.data$Recording=="Recording266") & all.data$TOI=="d03-constr"),
 which((all.data$Recording=="Recording266"| all.data$Recording=="Recording142"| all.data$Recording=="Recording267") & all.data$TOI=="d13-constr"),
 which((all.data$Recording=="Recording266"| all.data$Recording=="Recording267") & all.data$TOI=="h06-dilating"),
@@ -131,6 +170,7 @@ which(all.data$Recording=="Recording263" & (all.data$TOI=="b07-dilating" | all.d
 which(all.data$Recording=="Recording264" & (all.data$TOI=="b01-constr" | 
 all.data$TOI=="b04-constr")),
 which(all.data$Recording=="Recording261" & (all.data$TOI=="d02-constr" | all.data$TOI=="d12-constr"| all.data$TOI=="h14-dilating"| all.data$TOI=="d14-constr")),
+which(all.data$Recording=="Recording310" & (all.data$TOI=="b00-dilating" | all.data$TOI=="b15-constr"| all.data$TOI=="d14-dilating" | all.data$TOI=="h07-constr" | all.data$TOI=="h13-constr")),
 which(all.data$Recording=="Recording133" & (all.data$TOI=="b07-dilating" | all.data$TOI=="d04-dilating"| all.data$TOI=="d15-constr")),
 which(all.data$Recording=="Recording146" & (all.data$TOI=="b07-constr" | 
 all.data$TOI=="d05-constr")),
