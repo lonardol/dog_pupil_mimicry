@@ -26,9 +26,9 @@ all.data<-
 ```{r}
 #figure out which trials to filter out, because they were repeated with lower data loss
 trials.to.exclude<-c( 
-which(all.data$Recording=="Recording51" & all.data$TOI=="d14-constr"),
-which(all.data$Recording=="Recording51" & all.data$TOI=="h07-dilating"),
 which(all.data$Recording=="Recording52" & all.data$TOI=="d03-dilating"),
+which(all.data$Recording=="Recording53" & all.data$TOI=="d03-constr"),
+which(all.data$Recording=="Recording61" & all.data$TOI=="b03-dilating"),
 which(all.data$Recording=="Recording116" & all.data$TOI=="h14-constr"),
 which(all.data$Recording=="Recording140" & all.data$TOI=="d14-dilating"),
 which(all.data$Recording=="Recording141" & all.data$TOI=="b11-constr"),
@@ -62,7 +62,6 @@ which(all.data$Recording=="Recording288" & all.data$TOI=="d13-dilating"),
 which(all.data$Recording=="Recording279" & all.data$TOI=="h01-constr"),
 which(all.data$Recording=="Recording218" & all.data$TOI=="h09-dilating"),
 which(all.data$Recording=="Recording273" & all.data$TOI=="b02-constr"),
-which(all.data$Recording=="Recording53" & all.data$TOI=="d03-constr"),
 which(all.data$Recording=="Recording157" & all.data$TOI=="d04-constr"),
 which(all.data$Recording=="Recording166" & all.data$TOI=="d01-constr"),
 which(all.data$Recording=="Recording191" & all.data$TOI=="b14-constr"),
@@ -92,8 +91,12 @@ which(all.data$Recording=="Recording321" & all.data$TOI=="d12-dilating"),
 which(all.data$Recording=="Recording329" & all.data$TOI=="d00-constr"),
 which(all.data$Recording=="Recording282" & all.data$TOI=="d13-constr"),
 which(all.data$Recording=="Recording322" & all.data$TOI=="h01-constr"),
+which(all.data$Recording=="Recording51" & (all.data$TOI=="d14-constr" |
+all.data$TOI=="h07-dilating")),
 which(all.data$Recording=="Recording318" & (all.data$TOI=="h08-dilating" | 
 all.data$TOI=="b02-constr")),
+which(all.data$Recording=="Recording312" & (all.data$TOI=="b05-dilating"| 
+all.data$TOI=="h00-constr")),
 which(all.data$Recording=="Recording321" & (all.data$TOI=="d01-dilating"| 
 all.data$TOI=="b08-dilating")),
 which(all.data$Recording=="Recording326" & (all.data$TOI=="b11-dilating"| 
@@ -154,6 +157,10 @@ which((all.data$Recording=="Recording325"| all.data$Recording=="Recording352") &
 which((all.data$Recording=="Recording325"| all.data$Recording=="Recording323") & all.data$TOI=="b03-constr"),
 which((all.data$Recording=="Recording86"| all.data$Recording=="Recording266") & all.data$TOI=="d03-constr"),
 which((all.data$Recording=="Recording266"| all.data$Recording=="Recording142"| all.data$Recording=="Recording267") & all.data$TOI=="d13-constr"),
+which((all.data$Recording=="Recording94"| all.data$Recording=="Recording149"| all.data$Recording=="Recording92") & 
+(all.data$TOI=="h01-constr"| all.data$TOI=="h05-constr")),
+which((all.data$Recording=="Recording94"| all.data$Recording=="Recording149"| all.data$Recording=="Recording93") & (all.data$TOI=="b04-dilating" | all.data$TOI=="b12-dilating")),
+which((all.data$Recording=="Recording94"| all.data$Recording=="Recording149") & (all.data$TOI=="h03-constr" | all.data$TOI=="d01-constr")),
 which((all.data$Recording=="Recording266"| all.data$Recording=="Recording267") & all.data$TOI=="h06-dilating"),
 which((all.data$Recording=="Recording148"| all.data$Recording=="Recording266") & all.data$TOI=="h08-constr"),
 which((all.data$Recording=="Recording263"| all.data$Recording=="Recording266"| all.data$Recording=="Recording142") & all.data$TOI=="h11-constr"),
@@ -325,6 +332,11 @@ which(duplicated(tracked.gaze.data.red.messi$TOI)==TRUE)
 tracked.gaze.data.red.barney<-tracked.gaze.data.red %>% 
   filter(Participant=="Barney")
 which(duplicated(tracked.gaze.data.red.barney$TOI)==TRUE)
+
+#Jazz
+tracked.gaze.data.red.jazz<-tracked.gaze.data.red %>% 
+  filter(Participant=="jazz")
+which(duplicated(tracked.gaze.data.red.jazz$TOI)==TRUE)
 ```
 
 
@@ -356,5 +368,9 @@ to.be.repeated.Pepe<-tracked.gaze.data.red %>%
 filter(percent_tracked_gaze<50) %>% 
 filter(Participant=="Pepe")
 
+#Jazz
+to.be.repeated.Jazz<-tracked.gaze.data.red %>% 
+filter(percent_tracked_gaze<50) %>% 
+filter(Participant=="jazz")
 ```
 
