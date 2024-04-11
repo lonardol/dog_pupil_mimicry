@@ -23,7 +23,10 @@ library(tidyverse)
 
 #Make Parquet!
 #all.data <- read_tsv("./data/Data_export_23_3_2024.tsv") 
-all.data <- read_tsv("C:/Users/lonardol/Desktop/Eye-tracker/pupil_mimicry/analyses_Tobii/Data_export_23_3_2024.tsv")
+all.data <- read_tsv("C:/Users/lonardol/Desktop/Eye-tracker/pupil_mimicry/analyses_Tobii/Data_export_gaze_filter_fixation_10_04_2024.tsv")
+
+#Raw data
+#raw.data<-read_tsv("C:/Users/lonardol/Desktop/Eye-tracker/pupil_mimicry/analyses_Tobii/Data_export_raw_data_10_04_2024.tsv")
 
 names(all.data) <- gsub(" ", "_", names(all.data)) #replace spaces in column names with underscores
 
