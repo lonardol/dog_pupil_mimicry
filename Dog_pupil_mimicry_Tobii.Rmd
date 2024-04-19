@@ -323,7 +323,8 @@ sum(tracked.gaze.data$percent_tracked_gaze==tracked.gaze.data$percent_tracked_gl
 
 #only select relevant columns
 tracked.gaze.data.red<-tracked.gaze.data %>% 
-  select(c(Recording:Media, Average_pupil_diameter, Total_duration_of_Glances, condition, percent_tracked_gaze, percent_tracked_glances))
+  select(c(Recording:Media, Average_pupil_diameter, Total_duration_of_Glances, condition, percent_tracked_gaze, percent_tracked_glances)) %>% 
+  droplevels()
   
 #Trials to be excluded
 ##gaze
@@ -368,6 +369,8 @@ which(duplicated(tracked.gaze.data.red.barney$TOI)==TRUE)
 tracked.gaze.data.red.jazz<-tracked.gaze.data.red %>% 
   filter(Participant=="jazz")
 which(duplicated(tracked.gaze.data.red.jazz$TOI)==TRUE)
+#find out which recordings belong to Jazz, to exclude them from analyses 
+sort(unique(tracked.gaze.data.red.jazz$Recording))
 ```
 
 
