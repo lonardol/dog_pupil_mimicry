@@ -338,7 +338,7 @@ group_by(Participant) %>%
 summarise(percent_trials_excluded=sum(percent_tracked_glances<50)/length(percent_tracked_glances))
 ```
 
-###check if there are repeated sessions, to only keep trials with higher % tracked gaze 
+##check if there are repeated sessions, to only keep trials with higher % tracked gaze 
 ```{r}
 #Kaije
 tracked.gaze.data.red.kaije<-tracked.gaze.data.red %>% 
@@ -407,4 +407,32 @@ to.be.repeated.Jazz<-tracked.gaze.data.red %>%
 filter(percent_tracked_gaze<50) %>% 
 filter(Participant=="jazz")
 ```
+
+##import the preprocessed pupillometry data 
+```{r}
+#Tobii gaze fixation and pupil noise reduction filters applied to the data. Then, data pre-processed using the physiodata toolbox, using the default settings. Then data resampled to 1 Hz
+#Variable Both_pupil contains resampled pupil size in mm for both eyes
+library(readxl)
+
+prepr.pupil.data<-read_excel("./data/PhysioEpochsResampled_10Hz_20240424_human_pupil_parameters.xlsx", skip = 4, col_names=TRUE) %>%  #filter out first 4 rows (before headings)
+ separate(Sample_ID, into = c("Physioanalyzer_Period_of_Recording", "Recording", "Time"), sep = " ") %>% 
+ mutate(Recording= gsub("\\(Project2_|\\)", "", Recording)) %>% 
+ mutate(Time= gsub("\\(", "", Time)) %>% 
+ filter(grepl("constr|dilating", epochName))
+
+#add Participant info from Recording name
+## Select only the "Recording" and "Participant" columns from tracked.gaze.data (to only keep periods with stimuli video presentation)
+tracked.gaze.data.selected <- tracked.gaze.data [, c("Recording", "Participant")]
+
+#  
+
+
+prepr.pupil.data.merged <-full_join(prepr.pupil.data, tracked.gaze.data.selected) %>%  
+  filter(Participant!="jazz") %>% #did not meet inclusion criterion of at least 50% trials with at least 50% tracked gaze
+  droplevels() #LL: but here why do I get three values (rows) per 10 Hz? I should only have one row (one pupil size value) for each 10 ms interval
+   
+levels(as.factor(prepr.pupil.data.merged$Participant))
+ 
+```
+
 
