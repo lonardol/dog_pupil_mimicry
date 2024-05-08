@@ -8,6 +8,7 @@ output: html_document
 ```{r }
 rm(list=ls())
 library(tidyverse)
+load("~/GitHub/dog_pupil_mimicry/workspaces/Tobii_workspace.RData")
 ```
 
 ## Load data
@@ -424,13 +425,18 @@ prepr.pupil.data<-read_excel("./data/PhysioEpochsResampled_10Hz_20240424_human_p
 ## Select only the "Recording" and "Participant" columns from tracked.gaze.data (to only keep periods with stimuli video presentation)
 tracked.gaze.data.selected <- tracked.gaze.data [, c("Recording", "Participant")]
 
-#  
-
 
 prepr.pupil.data.merged <-full_join(prepr.pupil.data, tracked.gaze.data.selected) %>%  
   filter(Participant!="jazz") %>% #did not meet inclusion criterion of at least 50% trials with at least 50% tracked gaze
-  droplevels() #LL: but here why do I get three values (rows) per 10 Hz? I should only have one row (one pupil size value) for each 10 ms interval
-   
+  droplevels() %>% #LL: but here why do I get three values (rows) per 10 Hz? I should only have one row (one pupil size value) for each 10 ms interval
+  group_by(Recording) %>% 
+  distinct(Time, .keep_all = TRUE) %>% #Keep only the first row for each unique Time value within a recording and all columns
+  #LL: I tried these two lines but they do not seem to be doing the right thing as for example in Recording 102 they do not keep all the values of time for the last two stimuli.
+  mutate(stim_pupil_movement=ifelse(grepl("constr", epochName), "constricting", "dilating")) %>% 
+  mutate(stim_species=ifelse(grepl("DIA_d", Physioanalyzer_Period_of_Recording), "dog", ifelse(grepl("DIA_b", Physioanalyzer_Period_of_Recording), "bonobo", ifelse(grepl("DIA_h", Physioanalyzer_Period_of_Recording), "human","NA"))))
+  
+
+
 levels(as.factor(prepr.pupil.data.merged$Participant))
  
 ```
