@@ -425,8 +425,8 @@ prepr.pupil.data<-read_excel("./data/PhysioEpochsResampled_10Hz_20240424_human_p
 ## Select only the "Recording" and "Participant" columns from tracked.gaze.data (to only keep periods with stimuli video presentation)
 tracked.gaze.data.selected <- tracked.gaze.data [, c("Recording", "Participant")]
 
-
-prepr.pupil.data.merged <-full_join(prepr.pupil.data, tracked.gaze.data.selected) %>%  
+############################### until line 433 doesn't do the right thing #####################
+prepr.pupil.data.merged <-merge(prepr.pupil.data.selected, tracked.gaze.data.red) %>%  
   filter(Participant!="jazz") %>% #did not meet inclusion criterion of at least 50% trials with at least 50% tracked gaze
   droplevels() %>% #LL: but here why do I get three values (rows) per 10 Hz? I should only have one row (one pupil size value) for each 10 ms interval
   group_by(Recording) %>% 
@@ -435,10 +435,171 @@ prepr.pupil.data.merged <-full_join(prepr.pupil.data, tracked.gaze.data.selected
   mutate(stim_pupil_movement=ifelse(grepl("constr", epochName), "constricting", "dilating")) %>% 
   mutate(stim_species=ifelse(grepl("DIA_d", Physioanalyzer_Period_of_Recording), "dog", ifelse(grepl("DIA_b", Physioanalyzer_Period_of_Recording), "bonobo", ifelse(grepl("DIA_h", Physioanalyzer_Period_of_Recording), "human","NA"))))
   
-
-
 levels(as.factor(prepr.pupil.data.merged$Participant))
+rm(list=c("prepr.pupil.data.merged"))
+#######################################################################
+Recordings.Barney<-sort(unique(tracked.gaze.data.red.barney$Recording)) %>% 
+  droplevels()
+Recordings.Kaije<-sort(unique(tracked.gaze.data.red.kaije$Recording))%>% 
+  droplevels()
+Recordings.Messi<-sort(unique(tracked.gaze.data.red.messi$Recording))%>% 
+  droplevels()
+Recordings.Noodle<-sort(unique(tracked.gaze.data.red.noodle$Recording))%>% 
+  droplevels()
+Recordings.Pepe<-sort(unique(tracked.gaze.data.red.pepe$Recording))%>% 
+  droplevels()
+
+#number of recordings per dog
+length(Recordings.Barney)
+length(Recordings.Kaije)
+length(Recordings.Messi)
+length(Recordings.Noodle)
+length(Recordings.Pepe)
+#all recordings per dog
+Recordings.Barney
+Recordings.Kaije
+Recordings.Messi
+Recordings.Noodle
+Recordings.Pepe
+
+## Get independent variables 
+
+#Subject
+prepr.pupil.data1<-read_excel("./data/PhysioEpochsResampled_10Hz_20240424_human_pupil_parameters.xlsx", skip = 4, col_names=TRUE) %>% #filter out first 4 rows (before headings)
+ separate(Sample_ID, into = c("Physioanalyzer_Period_Recording", "Time"), sep = "\\) \\(") %>% 
+ #mutate(Recording= gsub("\\(Project2_|\\)", "", Recording)) %>% 
+ mutate(Time= gsub("\\)|s", "", Time)) %>% 
+ filter(grepl("constr|dilating", epochName)) %>% 
+ mutate(Recording.nr = as.numeric(str_extract(Physioanalyzer_Period_Recording, "(?<=_Recording).*$"))) %>% 
+ mutate(Recording=str_extract(Physioanalyzer_Period_Recording, "(?<=Project2_).*$")) %>% 
+ mutate(Subject=ifelse(Recording %in% Recordings.Barney, "Barney", 
+                 ifelse(Recording %in% Recordings.Pepe, "Pepe",
+                 ifelse(Recording %in% Recordings.Kaije, "Kaije",
+                 ifelse(Recording %in% Recordings.Messi, "Messi",
+                 ifelse(Recording %in% Recordings.Noodle, "Noodle", "NA")))))) 
  
+
+#Trial
+prepr.pupil.data2<-prepr.pupil.data1 %>% 
+ group_by(Physioanalyzer_Period_Recording, startTime, Recording.nr, Subject, startActualValue) %>% 
+  summarise(Trial = n()) %>% 
+  group_by(Subject) %>% 
+  arrange(Recording.nr, startTime) %>%
+  summarise(Trial=row_number(),
+            startActualValue = startActualValue,
+            startTime = startTime,
+            Recording.nr = Recording.nr) 
+
+#Lagged time
+prepr.pupil.data3<-prepr.pupil.data1 %>% 
+  group_by(Subject, Physioanalyzer_Period_Recording) %>% 
+  mutate(Time_minus_one=lag(Time, default=NA)) %>% #Add Time-1 to account for autocorrelation 
+  ungroup()
+
+#Condition (stim_pupil_movement) and stimulus species
+prepr.pupil.data<-full_join(prepr.pupil.data1, prepr.pupil.data2) %>% 
+  full_join(prepr.pupil.data3) %>% 
+  mutate(Stim_pupil_movement=ifelse(grepl("constr", epochName), "constricting", 
+                                          ifelse(grepl("dilating", epochName), "dilating", NA))) %>% 
+  mutate(Stim_species=ifelse(grepl("DIA_d", Physioanalyzer_Period_Recording), "dog", ifelse(grepl("DIA_b", Physioanalyzer_Period_Recording), "bonobo", ifelse(grepl("DIA_h", Physioanalyzer_Period_Recording), "human","NA")))) %>% 
+  mutate(Time=as.numeric(Time)) %>% 
+   mutate(Time_minus_one=as.numeric(Time_minus_one))
+
+```
+#fit multilevel model with polynomials
+```{r}
+library(lme4)
+mm1.tobii.full.int<-lmer(Both_Pupil ~ 1 + Stim_pupil_movement*Stim_species + Time + Time_minus_one + I(Time^2)+ I(Time^3) + 
+                  Time:Stim_species + I(Time^2):Stim_species + I(Time^3):Stim_species + 
+                  Time:Stim_pupil_movement + I(Time^2):Stim_pupil_movement + I(Time^3):Stim_pupil_movement +
+                  Time:Stim_species:Stim_pupil_movement + I(Time^2):Stim_species:Stim_pupil_movement + I(Time^3):Stim_species:Stim_pupil_movement +
+                  (1 | Subject/Trial),  
+                  data=prepr.pupil.data, REML=F)
+#fixed-effect model matrix is rank deficient so dropping 1 column / coefficient
+
+mm1.tobii.null<-lmer(Both_Pupil ~ 1 + Time + Time_minus_one + I(Time^2)+ I(Time^3) +
+                  (1 | Subject/Trial),  
+                  data=prepr.pupil.data, REML=F)
+
+#fixed-effect model matrix is rank deficient so dropping 1 column / coefficient
+```
+```{r}
+as.data.frame(anova(mm1.tobii.null, mm1.tobii.full, test="Chisq")) #full-null model comparison is significant (Chisq.=111.64, Df=20, P<.001)	
 ```
 
+
+```{r}
+#Results
+summary(mm1.tobii.full.int)$coefficients
+```
+
+```{r}
+# for an LMM, P-values for the individual fixed effects are most reliable when obtained using the Satterthwaite approximation
+# for a model based on REML (Luke 2017)
+library(lmerTest)
+
+mm1.tobii.full.int.reml = lmerTest::lmer(Both_Pupil ~ 1 + Stim_pupil_movement*Stim_species + Time + Time_minus_one + I(Time^2)+ I(Time^3) + 
+                  Time:Stim_species + I(Time^2):Stim_species + I(Time^3):Stim_species + 
+                  Time:Stim_pupil_movement + I(Time^2):Stim_pupil_movement + I(Time^3):Stim_pupil_movement +
+                  Time:Stim_species:Stim_pupil_movement + I(Time^2):Stim_species:Stim_pupil_movement + I(Time^3):Stim_species:Stim_pupil_movement +
+                  (1 | Subject/Trial),  
+                  data=prepr.pupil.data, REML=T)
+
+round(summary(mm1.tobii.full.int.reml)$coefficients, 3)
+
+
+# to get an overall test of the interaction, compare the full model with a reduced model not comprising
+# the interaction between species and condition
+# fit the reduced model not comprising the interaction between species
+# and condition:
+library(lme4)
+mm1.tobii.red.int=lmer(Both_Pupil ~ 1 + Time + Time_minus_one + I(Time^2)+ I(Time^3) + 
+                  Time:Stim_species + I(Time^2):Stim_species + I(Time^3):Stim_species + 
+                  Time:Stim_pupil_movement + I(Time^2):Stim_pupil_movement + I(Time^3):Stim_pupil_movement +
+                  Time:Stim_species:Stim_pupil_movement + I(Time^2):Stim_species:Stim_pupil_movement + I(Time^3):Stim_species:Stim_pupil_movement +
+                  (1 | Subject/Trial),  
+                  data=prepr.pupil.data, REML=F)
+# compare full and reduced model:
+library(lmerTest)
+as.data.frame(anova(mm1.tobii.red.int, mm1.tobii.full.int, test="F")) #the interaction is not significant, remove it from model
+```
+```{r}
+#fit full model without interaction
+mm1.tobii.full<-lmer(Both_Pupil ~ 1 + Stim_pupil_movement + Stim_species + Time + Time_minus_one + I(Time^2)+ I(Time^3) + 
+                  Time:Stim_species + I(Time^2):Stim_species + I(Time^3):Stim_species + 
+                  Time:Stim_pupil_movement + I(Time^2):Stim_pupil_movement + I(Time^3):Stim_pupil_movement +
+                  (1 | Subject/Trial),  
+                  data=prepr.pupil.data, REML=F)
+                  
+#fixed-effect model matrix is rank deficient so dropping 1 column / coefficient
+```
+```{r}
+#full model without int, reml
+mm1.tobii.full.reml<-lmer(Both_Pupil ~ 1 + Stim_pupil_movement + Stim_species + Time + Time_minus_one + I(Time^2)+ I(Time^3) + 
+                  Time:Stim_species + I(Time^2):Stim_species + I(Time^3):Stim_species + 
+                  Time:Stim_pupil_movement + I(Time^2):Stim_pupil_movement + I(Time^3):Stim_pupil_movement +
+                  (1 | Subject/Trial),  
+                  data=prepr.pupil.data, REML=F)
+
+round(summary(mm1.tobii.full.reml)$coefficients, 3) #stimulus pupil movement not significant
+
+# to get an overall test of the fixed effect of species, compare the full model with a reduced model not comprising
+# the effect of stim_species 
+# fit the reduced model not comprising the effect of stim_species
+
+library(lme4)
+mm1.tobii.red=lmer(Both_Pupil ~ 1 +Stim_pupil_movement + Time + Time_minus_one + I(Time^2)+ I(Time^3) + 
+                  Time:Stim_pupil_movement + I(Time^2):Stim_pupil_movement + I(Time^3):Stim_pupil_movement +
+                  (1 | Subject/Trial),  
+                  data=prepr.pupil.data, REML=F)
+
+# compare full and reduced model:
+library(lmerTest)
+as.data.frame(anova(mm1.tobii.red, mm1.tobii.full, test="F")) #stimulus species has a significant effect (Chisq. 30.80, df=8, P<.001)
+```
+
+
+```{r}
+#Model stability 
+```
 
