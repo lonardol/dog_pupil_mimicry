@@ -497,14 +497,29 @@ prepr.pupil.data3<-prepr.pupil.data1 %>%
   ungroup()
 
 #Condition (stim_pupil_movement) and stimulus species
-prepr.pupil.data<-full_join(prepr.pupil.data1, prepr.pupil.data2) %>% 
+prepr.pupil.data4<-full_join(prepr.pupil.data1, prepr.pupil.data2) %>% 
   full_join(prepr.pupil.data3) %>% 
   mutate(Stim_pupil_movement=ifelse(grepl("constr", epochName), "constricting", 
                                           ifelse(grepl("dilating", epochName), "dilating", NA))) %>% 
   mutate(Stim_species=ifelse(grepl("DIA_d", Physioanalyzer_Period_Recording), "dog", ifelse(grepl("DIA_b", Physioanalyzer_Period_Recording), "bonobo", ifelse(grepl("DIA_h", Physioanalyzer_Period_Recording), "human","NA")))) %>% 
   mutate(Time=as.numeric(Time)) %>% 
-   mutate(Time_minus_one=as.numeric(Time_minus_one))
+   mutate(Time_minus_one=as.numeric(Time_minus_one)) 
 
+  # determine baseline
+baseline.end=1.25 #(1250 ms = 1.25 s)
+pupil.baseline <- prepr.pupil.data4 %>%
+  filter(Time < baseline.end & Time > 0) %>% 
+  group_by(Subject, Stim_pupil_movement) %>%
+  summarise(median.base.pupil = median(Both_Pupil, na.rm = TRUE))
+
+#perform subtractive baseline correction
+prepr.pupil.data <- prepr.pupil.data4 %>%
+  group_by(Subject, Stim_pupil_movement, Trial) %>%
+  full_join(pupil.baseline) %>% #add baseline data
+  mutate(pupil.base.corrected = Both_Pupil - median.base.pupil)%>% #subtractive baseline correction
+  ungroup()
+
+##LL: STILL TO DO: filter the data to only keep 4 seconds from end baseline 1.25 until 5.25 s!!!
 ```
 #fit multilevel model with polynomials
 ```{r}
@@ -524,7 +539,7 @@ mm1.tobii.null<-lmer(Both_Pupil ~ 1 + Time + Time_minus_one + I(Time^2)+ I(Time^
 #fixed-effect model matrix is rank deficient so dropping 1 column / coefficient
 ```
 ```{r}
-as.data.frame(anova(mm1.tobii.null, mm1.tobii.full, test="Chisq")) #full-null model comparison is significant (Chisq.=111.64, Df=20, P<.001)	
+as.data.frame(anova(mm1.tobii.null, mm1.tobii.full, test="Chisq")) #full-null model comparison is significant (Chisq.=61.99, Df=12, P<.001)	
 ```
 
 
@@ -601,5 +616,83 @@ as.data.frame(anova(mm1.tobii.red, mm1.tobii.full, test="F")) #stimulus species 
 
 ```{r}
 #Model stability 
+
+
 ```
 
+
+```{r}
+#Stimulus Pupil Movement Plot
+
+prepr.pupil.data.bins<- prepr.pupil.data %>%
+  group_by(Time, Stim_pupil_movement) %>%
+  summarise(mean.pupil.corrected.binned = mean(pupil.base.corrected, na.rm = TRUE), sd.pupil.corrected.binned= sd(Both_Pupil, na.rm = TRUE), se.pupil.corrected.binned = sd(pupil.base.corrected, na.rm = TRUE) / sqrt(length(pupil.base.corrected)))
+
+
+
+pupil.plot <- ggplot(data = prepr.pupil.data.bins, aes(x = Time, y = mean.pupil.corrected.binned)) +
+  geom_vline(aes(xintercept=baseline.end), lty=2, alpha=0.3)+
+  ylab("Pupil size (a.u.)") +
+  xlab("Time (in s)") +
+  geom_point(aes(x = Time, y = mean.pupil.corrected.binned, color = Stim_pupil_movement), alpha = 0.3, size = 0.5) +
+  geom_ribbon(aes(ymin = mean.pupil.corrected.binned - se.pupil.corrected.binned, ymax = mean.pupil.corrected.binned + se.pupil.corrected.binned, fill = Stim_pupil_movement), alpha = 0.6) +
+    xlim(0, 5.8) +
+    theme_bw()+
+  scale_color_brewer(palette="Dark2")+
+  scale_fill_brewer(palette="Dark2")+
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        legend.title = element_text("Stimulus pupil movement"), legend.position = c(0.80, 0.25), legend.text=element_text(size=12),
+        axis.text.y=element_text(size=16), axis.text.x=element_text(size=16),
+        axis.title=element_text(size=18))+
+        labs(color = "Stimulus pupil movement", fill = "Stimulus pupil movement")
+
+pupil.plot
+```
+
+
+```{r}
+#Save the Stimulus Pupil Movement plot
+ggsave(pupil.plot, filename = "graphs/preprocessed.baseline.corrected.pupil.plot.png", height = 5, width = 8, scale = 0.7, dpi=1200)
+```
+
+
+```{r}
+#Stimulus Species Plot
+
+prepr.pupil.data.bins.species<- prepr.pupil.data %>%
+  group_by(Time, Stim_species) %>%
+  summarise(mean.pupil.corrected.binned = mean(pupil.base.corrected, na.rm = TRUE), sd.pupil.corrected.binned= sd(Both_Pupil, na.rm = TRUE), se.pupil.corrected.binned = sd(pupil.base.corrected, na.rm = TRUE) / sqrt(length(pupil.base.corrected)))
+
+
+
+pupil.species.plot <- ggplot(data = prepr.pupil.data.bins.species, aes(x = Time, y = mean.pupil.corrected.binned)) +
+  geom_vline(aes(xintercept=baseline.end), lty=2, alpha=0.3)+
+  ylab("Pupil size (a.u.)") +
+  xlab("Time (in s)") +
+  geom_point(aes(x = Time, y = mean.pupil.corrected.binned, color = Stim_species), alpha = 0.3, size = 0.5) +
+  geom_ribbon(aes(ymin = mean.pupil.corrected.binned - se.pupil.corrected.binned, ymax = mean.pupil.corrected.binned + se.pupil.corrected.binned, fill = Stim_species), alpha = 0.6) +
+    xlim(0, 5.8) +
+    ylim(-0.5, 0.4)+
+    theme_bw()+
+  scale_color_brewer(palette="Dark2")+
+  scale_fill_brewer(palette="Dark2")+
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        legend.title = element_text(), legend.position = c(0.80, 0.2), legend.text=element_text(size=12),
+        axis.text.y=element_text(size=16), axis.text.x=element_text(size=16),
+        axis.title=element_text(size=18))+
+        labs(color = "Stimulus species", fill = "Stimulus species")
+
+pupil.species.plot
+```
+
+
+```{r}
+#Save the Stimulus Pupil Movement plot
+ggsave(pupil.species.plot, filename = "graphs/preprocessed.baseline.corrected.pupil.species.plot.png", height = 5, width = 8, scale = 0.7, dpi=1200)
+```
