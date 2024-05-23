@@ -23,6 +23,12 @@ all.data<-
   mutate(Timeline=as.factor(Timeline)) %>% 
   filter(Recording!="Recording48" & Recording!="Recording55" & Recording!="Recording56" & Recording!="Recording57" & Recording!="Recording58" & Recording!="Recording60" & Recording!="Recording68" & Recording!="Recording69" & Recording!="Recording70" & Recording!="Recording71" & Recording!="Recording72" & Recording!="Recording74" & Recording!="Recording75" & Recording!="Recording77" & Recording!="Recording78" & Recording!="Recording80" & Recording!="Recording81" & Recording!="Recording101" & Recording!="Recording105" & Recording!="Recording107" & Recording!="Recording108" & Recording!="Recording109" & Recording!="Recording119" & Recording!="Recording121" & Recording!="Recording124" & Recording!="Recording125" & Recording!="Recording126" & Recording!="Recording127" & Recording!="Recording128" & Recording!="Recording131" & Recording!="Recording137" & Recording!="Recording156" & Recording!="Recording158" & Recording!="Recording160" & Recording!="Recording161" & Recording!="Recording162" & Recording!="Recording164" & Recording!="Recording165" & Recording!="Recording170" & Recording!="Recording172" & Recording!="Recording175" & Recording!="Recording177" & Recording!="Recording180" & Recording!="Recording188" & Recording!="Recording189" & Recording!="Recording193" & Recording!="Recording194" & Recording!="Recording195" & Recording!="Recording210" & Recording!="Recording221" & Recording!="Recording244" & Recording!="Recording231" & Recording!="Recording248" & Recording!="Recording251" & Recording!="Recording252" & Recording!="Recording259" & Recording!="Recording260" & Recording!="Recording299" & Recording!="Recording305" & Recording!="Recording307" & Recording!="Recording310" & Recording!="Recording348" & Recording!="Recording349" & Recording!="Recording350" & Recording!="Recording351" & Recording!="Recording352" & Recording!="Recording353" & Recording!="Recording354" & Recording!="Recording356" & Recording!="Recording357" & Recording!="Recording358" & Recording!="Recording359" & Recording!="Recording360" & Recording!="Recording362" & Recording!="Recording363" & Recording!="Recording372" & Recording!="Recording359" & Recording!="Recording369" & Recording!="Recording393") %>% # Sessions to be excluded (if not already excluded from project) as they were collected again with lower data loss
 droplevels()
+
+
+nova.data<-read_tsv("./data/Learning_Metrics.tsv") %>%  
+  mutate(Recording=as.factor(Recording)) %>% 
+  mutate(Participant=as.factor(Participant)) %>% 
+  mutate(Timeline=as.factor(Timeline))
 ```
 
 ```{r}
@@ -231,6 +237,12 @@ all.data.toi<-all.data %>%
   filter(TOI!="Entire Recording") %>% 
   droplevels() %>% 
   mutate(condition=ifelse(grepl("constr", TOI), "constricting", ifelse(grepl("dilating", TOI), "dilating", "grey_screen")))
+
+nova.data.toi<-nova.data%>% 
+  filter(TOI!="Entire Recording") %>% 
+  filter(Recording!="test w lucrezia") %>% 
+  droplevels() %>% 
+  mutate(condition=ifelse(grepl("constr", TOI), "constricting", ifelse(grepl("dilating", TOI), "dilating", "grey_screen")))
 ```
 
 ## Explore data
@@ -248,6 +260,23 @@ all.data.toi.trials<-all.data.toi %>%
 #mutate(N_trials_collected=count(Participant)) alternative to what is below
   group_by(Participant) %>% 
   summarise(N_trials_collected=n())
+```
+##Explore Nova's data
+```{r}
+str(nova.data.toi)
+levels(as.factor(nova.data.toi$Recording))
+table(nova.data.toi$Participant, nova.data.toi$Recording)
+levels(as.factor(nova.data.toi$TOI))
+levels(as.factor(nova.data.toi$Timeline))
+nova.data.toi$TOI[nova.data.toi$Timeline=="Nova 11th session"] #d08-constr missing
+
+
+#check how many trials were collected with Nova
+nova.data.toi.trials<-nova.data.toi %>% 
+  filter(!grepl("Grey screen", TOI)) %>% 
+#mutate(N_trials_collected=count(Participant)) alternative to what is below
+  group_by(Participant) %>% 
+  summarise(N_trials_collected=n()) #Nova has 101 trials
 ```
 
 ##Individual checks to see if there are repeated trials
@@ -327,6 +356,49 @@ tracked.gaze.data.red<-tracked.gaze.data %>%
   select(c(Recording:Media, Average_pupil_diameter, Total_duration_of_Glances, condition, percent_tracked_gaze, percent_tracked_glances)) %>% 
   droplevels()
   
+#Trials to be excluded
+##gaze
+tracked.gaze.data.red.to.be.excluded<-tracked.gaze.data.red %>% 
+group_by(Participant) %>% 
+summarise(percent_trials_excluded=sum(percent_tracked_gaze<50)/length(percent_tracked_gaze))
+
+##glances
+tracked.glances.data.red.to.be.excluded<-tracked.gaze.data.red %>% 
+group_by(Participant) %>% 
+summarise(percent_trials_excluded=sum(percent_tracked_glances<50)/length(percent_tracked_glances))
+```
+
+
+```{r}
+#For Nova:
+pattern <- "(constr|dilating).*"
+
+#LL: 23/05 continue from here:
+tracked.gaze.data.nova<-nova.data.toi %>% 
+ filter(!grepl("Grey screen", TOI)) %>% 
+ mutate(TOI= as_factor(str_replace_all(as.character(TOI), pattern, "\\1"))) %>% 
+ mutate(percent_tracked_gaze=(Total_duration_of_fixations/Duration_of_interval)*100) %>% 
+ mutate(percent_tracked_glances=(Total_duration_of_Glances/Duration_of_interval)*100)
+
+
+
+#using glances instead of fixations results in the gaze being detected for longer
+summary(tracked.gaze.data.nova$percent_tracked_gaze)
+summary(tracked.gaze.data.nova$percent_tracked_glances)
+sum(tracked.gaze.data.nova$percent_tracked_gaze<tracked.gaze.data.nova$percent_tracked_glances)
+sum(tracked.gaze.data.nova$percent_tracked_gaze>tracked.gaze.data.nova$percent_tracked_glances)
+sum(tracked.gaze.data.nova$percent_tracked_gaze==tracked.gaze.data.nova$percent_tracked_glances)
+
+#potentially replace Total_duration_of_fixations with Total_duration_of_Glances.
+#However for now I continue with fixations (the more conservative measure)
+
+#only select relevant columns
+tracked.gaze.data.red.nova<-tracked.gaze.data.nova %>% 
+  select(c(Recording:Media, Average_pupil_diameter, Total_duration_of_Glances, condition, percent_tracked_gaze, percent_tracked_glances)) %>% 
+  droplevels()
+  
+##ADD HERE FULL-JOIN WITH OTHER DOGS?
+
 #Trials to be excluded
 ##gaze
 tracked.gaze.data.red.to.be.excluded<-tracked.gaze.data.red %>% 
