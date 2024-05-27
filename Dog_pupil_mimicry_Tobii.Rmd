@@ -23,9 +23,12 @@ all.data<-
   mutate(Timeline=as.factor(Timeline)) %>% 
   filter(Recording!="Recording48" & Recording!="Recording55" & Recording!="Recording56" & Recording!="Recording57" & Recording!="Recording58" & Recording!="Recording60" & Recording!="Recording68" & Recording!="Recording69" & Recording!="Recording70" & Recording!="Recording71" & Recording!="Recording72" & Recording!="Recording74" & Recording!="Recording75" & Recording!="Recording77" & Recording!="Recording78" & Recording!="Recording80" & Recording!="Recording81" & Recording!="Recording101" & Recording!="Recording105" & Recording!="Recording107" & Recording!="Recording108" & Recording!="Recording109" & Recording!="Recording119" & Recording!="Recording121" & Recording!="Recording124" & Recording!="Recording125" & Recording!="Recording126" & Recording!="Recording127" & Recording!="Recording128" & Recording!="Recording131" & Recording!="Recording137" & Recording!="Recording156" & Recording!="Recording158" & Recording!="Recording160" & Recording!="Recording161" & Recording!="Recording162" & Recording!="Recording164" & Recording!="Recording165" & Recording!="Recording170" & Recording!="Recording172" & Recording!="Recording175" & Recording!="Recording177" & Recording!="Recording180" & Recording!="Recording188" & Recording!="Recording189" & Recording!="Recording193" & Recording!="Recording194" & Recording!="Recording195" & Recording!="Recording210" & Recording!="Recording221" & Recording!="Recording244" & Recording!="Recording231" & Recording!="Recording248" & Recording!="Recording251" & Recording!="Recording252" & Recording!="Recording259" & Recording!="Recording260" & Recording!="Recording299" & Recording!="Recording305" & Recording!="Recording307" & Recording!="Recording310" & Recording!="Recording348" & Recording!="Recording349" & Recording!="Recording350" & Recording!="Recording351" & Recording!="Recording352" & Recording!="Recording353" & Recording!="Recording354" & Recording!="Recording356" & Recording!="Recording357" & Recording!="Recording358" & Recording!="Recording359" & Recording!="Recording360" & Recording!="Recording362" & Recording!="Recording363" & Recording!="Recording372" & Recording!="Recording359" & Recording!="Recording369" & Recording!="Recording393") %>% # Sessions to be excluded (if not already excluded from project) as they were collected again with lower data loss
 droplevels()
+```
 
 
-nova.data<-read_tsv("./data/Learning_Metrics.tsv") %>%  
+```{r}
+#Nova's data
+nova.data<-read_tsv("./data/LearningMetricsAOI_Interval_Nova.tsv") %>%  
   mutate(Recording=as.factor(Recording)) %>% 
   mutate(Participant=as.factor(Participant)) %>% 
   mutate(Timeline=as.factor(Timeline))
@@ -237,10 +240,15 @@ all.data.toi<-all.data %>%
   filter(TOI!="Entire Recording") %>% 
   droplevels() %>% 
   mutate(condition=ifelse(grepl("constr", TOI), "constricting", ifelse(grepl("dilating", TOI), "dilating", "grey_screen")))
+```
 
+
+```{r}
+#Nova's data
 nova.data.toi<-nova.data%>% 
   filter(TOI!="Entire Recording") %>% 
   filter(Recording!="test w lucrezia") %>% 
+  filter(Recording!="Session6.1") %>% #accidental repetition of session 5
   droplevels() %>% 
   mutate(condition=ifelse(grepl("constr", TOI), "constricting", ifelse(grepl("dilating", TOI), "dilating", "grey_screen")))
 ```
@@ -265,7 +273,7 @@ all.data.toi.trials<-all.data.toi %>%
 ```{r}
 str(nova.data.toi)
 levels(as.factor(nova.data.toi$Recording))
-table(nova.data.toi$Participant, nova.data.toi$Recording)
+table(nova.data.toi$Participant, nova.data.toi$Recording) #one trial missing from her 11th session
 levels(as.factor(nova.data.toi$TOI))
 levels(as.factor(nova.data.toi$Timeline))
 nova.data.toi$TOI[nova.data.toi$Timeline=="Nova 11th session"] #d08-constr missing
@@ -276,7 +284,7 @@ nova.data.toi.trials<-nova.data.toi %>%
   filter(!grepl("Grey screen", TOI)) %>% 
 #mutate(N_trials_collected=count(Participant)) alternative to what is below
   group_by(Participant) %>% 
-  summarise(N_trials_collected=n()) #Nova has 101 trials
+  summarise(N_trials_collected=n()) #Nova has 95 trials
 ```
 
 ##Individual checks to see if there are repeated trials
@@ -355,17 +363,6 @@ sum(tracked.gaze.data$percent_tracked_gaze==tracked.gaze.data$percent_tracked_gl
 tracked.gaze.data.red<-tracked.gaze.data %>% 
   select(c(Recording:Media, Average_pupil_diameter, Total_duration_of_Glances, condition, percent_tracked_gaze, percent_tracked_glances)) %>% 
   droplevels()
-  
-#Trials to be excluded
-##gaze
-tracked.gaze.data.red.to.be.excluded<-tracked.gaze.data.red %>% 
-group_by(Participant) %>% 
-summarise(percent_trials_excluded=sum(percent_tracked_gaze<50)/length(percent_tracked_gaze))
-
-##glances
-tracked.glances.data.red.to.be.excluded<-tracked.gaze.data.red %>% 
-group_by(Participant) %>% 
-summarise(percent_trials_excluded=sum(percent_tracked_glances<50)/length(percent_tracked_glances))
 ```
 
 
@@ -373,11 +370,10 @@ summarise(percent_trials_excluded=sum(percent_tracked_glances<50)/length(percent
 #For Nova:
 pattern <- "(constr|dilating).*"
 
-#LL: 23/05 continue from here:
 tracked.gaze.data.nova<-nova.data.toi %>% 
  filter(!grepl("Grey screen", TOI)) %>% 
  mutate(TOI= as_factor(str_replace_all(as.character(TOI), pattern, "\\1"))) %>% 
- mutate(percent_tracked_gaze=(Total_duration_of_fixations/Duration_of_interval)*100) %>% 
+ mutate(percent_tracked_gaze=(Total_duration_of_fixations/Duration_of_interval)*100) %>%
  mutate(percent_tracked_glances=(Total_duration_of_Glances/Duration_of_interval)*100)
 
 
@@ -397,8 +393,12 @@ tracked.gaze.data.red.nova<-tracked.gaze.data.nova %>%
   select(c(Recording:Media, Average_pupil_diameter, Total_duration_of_Glances, condition, percent_tracked_gaze, percent_tracked_glances)) %>% 
   droplevels()
   
-##ADD HERE FULL-JOIN WITH OTHER DOGS?
+##Merge Nova and other dogs' datas
+tracked.gaze.data.red<-tracked.gaze.data.red %>% 
+  full_join(tracked.gaze.data.red.nova)
+```
 
+```{r}
 #Trials to be excluded
 ##gaze
 tracked.gaze.data.red.to.be.excluded<-tracked.gaze.data.red %>% 
@@ -411,6 +411,7 @@ group_by(Participant) %>%
 summarise(percent_trials_excluded=sum(percent_tracked_glances<50)/length(percent_tracked_glances))
 ```
 
+
 ##check if there are repeated sessions, to only keep trials with higher % tracked gaze 
 ```{r}
 #Kaije
@@ -422,6 +423,11 @@ which(duplicated(tracked.gaze.data.red.kaije$TOI)==TRUE)
 tracked.gaze.data.red.noodle<-tracked.gaze.data.red %>% 
   filter(Participant=="Noodle")
 which(duplicated(tracked.gaze.data.red.noodle$TOI)==TRUE)
+
+#Nova
+tracked.gaze.data.red.noodle<-tracked.gaze.data.red %>% 
+  filter(Participant=="Nova")
+which(duplicated(tracked.gaze.data.red.nova$TOI)==TRUE)
 
 #Pepe
 tracked.gaze.data.red.pepe<-tracked.gaze.data.red %>% 
@@ -470,6 +476,11 @@ to.be.repeated.Noodle<-tracked.gaze.data.red %>%
 filter(percent_tracked_gaze<50) %>% 
 filter(Participant=="Noodle")
 
+#Nova
+to.be.repeated.Nova<-tracked.gaze.data.red %>% 
+filter(percent_tracked_gaze<50) %>% 
+filter(Participant=="Nova")
+
 #Pepe
 to.be.repeated.Pepe<-tracked.gaze.data.red %>% 
 filter(percent_tracked_gaze<50) %>% 
@@ -480,6 +491,20 @@ to.be.repeated.Jazz<-tracked.gaze.data.red %>%
 filter(percent_tracked_gaze<50) %>% 
 filter(Participant=="jazz")
 ```
+
+```{r}
+#LL: Send excel file to Kia, so she can repeat some sessions
+install.packages("writexl")
+library(writexl)
+# Exclude columns 5, 7, 8, and 11 (not needed)
+to.be.repeated.nova.red <- to.be.repeated.Nova %>% 
+  select(-c(5, 7, 8, 9, 11)) %>% 
+  arrange(percent_tracked_gaze)
+
+# Write the modified data frame to an Excel file
+write_xlsx(to.be.repeated.nova.red, "./output/to_be_repeated_nova.xlsx")
+```
+
 
 ##import the preprocessed pupillometry data 
 ```{r}
@@ -493,23 +518,6 @@ prepr.pupil.data<-read_excel("./data/PhysioEpochsResampled_10Hz_20240424_human_p
  mutate(Time= gsub("\\(", "", Time)) %>% 
  filter(grepl("constr|dilating", epochName))
 
-#add Participant info from Recording name
-## Select only the "Recording" and "Participant" columns from tracked.gaze.data (to only keep periods with stimuli video presentation)
-tracked.gaze.data.selected <- tracked.gaze.data [, c("Recording", "Participant")]
-
-############################### until line 433 doesn't do the right thing #####################
-prepr.pupil.data.merged <-merge(prepr.pupil.data.selected, tracked.gaze.data.red) %>%  
-  filter(Participant!="jazz") %>% #did not meet inclusion criterion of at least 50% trials with at least 50% tracked gaze
-  droplevels() %>% #LL: but here why do I get three values (rows) per 10 Hz? I should only have one row (one pupil size value) for each 10 ms interval
-  group_by(Recording) %>% 
-  distinct(Time, .keep_all = TRUE) %>% #Keep only the first row for each unique Time value within a recording and all columns
-  #LL: I tried these two lines but they do not seem to be doing the right thing as for example in Recording 102 they do not keep all the values of time for the last two stimuli.
-  mutate(stim_pupil_movement=ifelse(grepl("constr", epochName), "constricting", "dilating")) %>% 
-  mutate(stim_species=ifelse(grepl("DIA_d", Physioanalyzer_Period_of_Recording), "dog", ifelse(grepl("DIA_b", Physioanalyzer_Period_of_Recording), "bonobo", ifelse(grepl("DIA_h", Physioanalyzer_Period_of_Recording), "human","NA"))))
-  
-levels(as.factor(prepr.pupil.data.merged$Participant))
-rm(list=c("prepr.pupil.data.merged"))
-#######################################################################
 Recordings.Barney<-sort(unique(tracked.gaze.data.red.barney$Recording)) %>% 
   droplevels()
 Recordings.Kaije<-sort(unique(tracked.gaze.data.red.kaije$Recording))%>% 
@@ -534,9 +542,9 @@ Recordings.Messi
 Recordings.Noodle
 Recordings.Pepe
 
-## Get independent variables 
+# Get independent variables 
 
-#Subject
+## Subject
 prepr.pupil.data1<-read_excel("./data/PhysioEpochsResampled_10Hz_20240424_human_pupil_parameters.xlsx", skip = 4, col_names=TRUE) %>% #filter out first 4 rows (before headings)
  separate(Sample_ID, into = c("Physioanalyzer_Period_Recording", "Time"), sep = "\\) \\(") %>% 
  #mutate(Recording= gsub("\\(Project2_|\\)", "", Recording)) %>% 
@@ -551,7 +559,7 @@ prepr.pupil.data1<-read_excel("./data/PhysioEpochsResampled_10Hz_20240424_human_
                  ifelse(Recording %in% Recordings.Noodle, "Noodle", "NA")))))) 
  
 
-#Trial
+## Trial
 prepr.pupil.data2<-prepr.pupil.data1 %>% 
  group_by(Physioanalyzer_Period_Recording, startTime, Recording.nr, Subject, startActualValue) %>% 
   summarise(Trial = n()) %>% 
@@ -562,13 +570,13 @@ prepr.pupil.data2<-prepr.pupil.data1 %>%
             startTime = startTime,
             Recording.nr = Recording.nr) 
 
-#Lagged time
+## Lagged time
 prepr.pupil.data3<-prepr.pupil.data1 %>% 
   group_by(Subject, Physioanalyzer_Period_Recording) %>% 
   mutate(Time_minus_one=lag(Time, default=NA)) %>% #Add Time-1 to account for autocorrelation 
   ungroup()
 
-#Condition (stim_pupil_movement) and stimulus species
+## Condition (stim_pupil_movement) and stimulus species
 prepr.pupil.data4<-full_join(prepr.pupil.data1, prepr.pupil.data2) %>% 
   full_join(prepr.pupil.data3) %>% 
   mutate(Stim_pupil_movement=ifelse(grepl("constr", epochName), "constricting", 
@@ -577,23 +585,22 @@ prepr.pupil.data4<-full_join(prepr.pupil.data1, prepr.pupil.data2) %>%
   mutate(Time=as.numeric(Time)) %>% 
    mutate(Time_minus_one=as.numeric(Time_minus_one)) 
 
-  # determine baseline
+#Determine baseline
 baseline.end=1.25 #(1250 ms = 1.25 s)
 pupil.baseline <- prepr.pupil.data4 %>%
   filter(Time < baseline.end & Time > 0) %>% 
   group_by(Subject, Stim_pupil_movement) %>%
   summarise(median.base.pupil = median(Both_Pupil, na.rm = TRUE))
 
-#perform subtractive baseline correction
+#Perform subtractive baseline correction and only restrict analyses to 4-second time window from the end of baseline 
 prepr.pupil.data <- prepr.pupil.data4 %>%
   group_by(Subject, Stim_pupil_movement, Trial) %>%
   full_join(pupil.baseline) %>% #add baseline data
   mutate(pupil.base.corrected = Both_Pupil - median.base.pupil)%>% #subtractive baseline correction
-  ungroup()
-
-##LL: STILL TO DO: filter the data to only keep 4 seconds from end baseline 1.25 until 5.25 s!!!
+  ungroup() %>% 
+  filter(Time > baseline.end) ##Only keep 4 seconds from end baseline 
 ```
-#fit multilevel model with polynomials
+#LL: 27/07/2024: CONTINUE FROM HERE: fit multilevel model with polynomials
 ```{r}
 library(lme4)
 mm1.tobii.full.int<-lmer(Both_Pupil ~ 1 + Stim_pupil_movement*Stim_species + Time + Time_minus_one + I(Time^2)+ I(Time^3) + 
