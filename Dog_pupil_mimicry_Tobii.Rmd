@@ -598,14 +598,30 @@ prepr.pupil.data <- prepr.pupil.data4 %>%
   full_join(pupil.baseline) %>% #add baseline data
   mutate(pupil.base.corrected = Both_Pupil - median.base.pupil)%>% #subtractive baseline correction
   ungroup() %>% 
-  filter(Time > baseline.end) ##Only keep 4 seconds from end baseline 
+  filter(Time > baseline.end & Time < 5.26) ##Only keep 4 seconds from end baseline 
 ```
-# LL: 28/05/2024: before fitting the model again, try to use Roger's function fe.re.tab on prepr.pupil.data, to get rid of NAs
+# prepare data for modelling 
 ```{r}
-#prepare data for modelling
+#get rid of NAs and get dummy coded variables for factors
 source("./functions/diagnostic_fcns.r")
-xx.fe.re=fe.re.tab(fe.model="log.cort~rank*daytime+fai+sex",
-re="(1|subj)+(1|group)+(1|gr.date)", data=xdata)
+xx.fe.re=fe.re.tab(fe.model="Both_Pupil ~ Stim_pupil_movement*Stim_species + Time + Time_minus_one+ I(Time^2)+ I(Time^3) + 
+                  Time:Stim_species + I(Time^2):Stim_species + I(Time^3):Stim_species + 
+                  Time:Stim_pupil_movement + I(Time^2):Stim_pupil_movement + I(Time^3):Stim_pupil_movement +
+                  Time:Stim_species:Stim_pupil_movement + I(Time^2):Stim_species:Stim_pupil_movement + I(Time^3):Stim_species:Stim_pupil_movement",
+re="(1|Subject)+(1|Trial)", data=prepr.pupil.data)
+
+model.data<-xx.fe.re$data
+str(model.data)
+
+#center dummy variables
+model.data$Stim_pupil_movement.dilating=model.data$Stim_pupil_movement.dilating-mean(model.data$Stim_pupil_movement.dilating)
+model.data$Stim_species.dog=model.data$Stim_species.dog-mean(model.data$Stim_species.dog)
+model.data$Stim_species.human=model.data$Stim_species.human-mean(model.data$Stim_species.human)
+
+#z-transform Trial
+model.data$z.Trial<-as.vector(scale(model.data$Trial))
+
+str(model.data)
 ```
 
 # fit multilevel model with polynomials
@@ -616,14 +632,14 @@ mm1.tobii.full.int<-lmer(Both_Pupil ~ 1 + Stim_pupil_movement*Stim_species + Tim
                   Time:Stim_pupil_movement + I(Time^2):Stim_pupil_movement + I(Time^3):Stim_pupil_movement +
                   Time:Stim_species:Stim_pupil_movement + I(Time^2):Stim_species:Stim_pupil_movement + I(Time^3):Stim_species:Stim_pupil_movement +
                   (1 | Subject/Trial),  
-                  data=prepr.pupil.data, REML=F)
+                  data=model.data, REML=F)
 #fixed-effect model matrix is rank deficient so dropping 1 column / coefficient
 
 mm1.tobii.null<-lmer(Both_Pupil ~ 1 + Time + Time_minus_one + I(Time^2)+ I(Time^3) +
                   (1 | Subject/Trial),  
-                  data=prepr.pupil.data, REML=F)
+                  data=model.data, REML=F)
 
-#fixed-effect model matrix is rank deficient so dropping 1 column / coefficient
+#fixed-effect model matrix is rank deficient so dropping 1 column / coefficient: is that where Time_minus_1 went?
 ```
 ```{r}
 as.data.frame(anova(mm1.tobii.null, mm1.tobii.full.int, test="Chisq")) #full-null model comparison is significant (Chisq.=72.54, Df=20, P<.001)	
@@ -632,7 +648,7 @@ as.data.frame(anova(mm1.tobii.null, mm1.tobii.full.int, test="Chisq")) #full-nul
 
 ```{r}
 #Results
-summary(mm1.tobii.full.int)$coefficients
+round(summary(mm1.tobii.full.int)$coefficients,3)
 
 #LL: WHERE IS TIME_MINUS_ONE?
 ```
@@ -647,7 +663,7 @@ mm1.tobii.full.int.reml = lmerTest::lmer(Both_Pupil ~ 1 + Stim_pupil_movement*St
                   Time:Stim_pupil_movement + I(Time^2):Stim_pupil_movement + I(Time^3):Stim_pupil_movement +
                   Time:Stim_species:Stim_pupil_movement + I(Time^2):Stim_species:Stim_pupil_movement + I(Time^3):Stim_species:Stim_pupil_movement +
                   (1 | Subject/Trial),  
-                  data=prepr.pupil.data, REML=T)
+                  data=model.data, REML=T)
 
 round(summary(mm1.tobii.full.int.reml)$coefficients, 3)
 
@@ -661,7 +677,7 @@ mm1.tobii.red.int=lmer(Both_Pupil ~ 1 + Time + Time_minus_one + I(Time^2)+ I(Tim
                   Time:Stim_species + I(Time^2):Stim_species + I(Time^3):Stim_species + 
                   Time:Stim_pupil_movement + I(Time^2):Stim_pupil_movement + I(Time^3):Stim_pupil_movement +
                   (1 | Subject/Trial),  
-                  data=prepr.pupil.data, REML=F)
+                  data=model.data, REML=F)
 # compare full and reduced model:
 library(lmerTest)
 as.data.frame(anova(mm1.tobii.red.int, mm1.tobii.full.int, test="F")) #the interaction is significant (Chisq = 33.36, df = 11, P < .001)
@@ -705,18 +721,73 @@ as.data.frame(anova(mm1.tobii.red.int, mm1.tobii.full.int, test="F")) #the inter
 ```{r}
 #Model assumptions and stability 
 
-source("./functions/diagnostic_fcns.r") #LL:add folder with functions to the repository
+source("./functions/diagnostic_fcns.r") 
 
 diagnostics.plot(mm1.tobii.full.int)
 ranef.diagn.plot(mm1.tobii.full.int)
 shapiro.test(residuals(mm1.tobii.full.int))# too many residuals
 source("./functions/glmm_stability.r")
-full.stab=glmm.model.stab(model.res=full, contr=NULL,
-para=F, data=NULL)
 
-full.stab_mm1.tobii.full.int=glmm.model.stab(model.res=mm1.tobii.full.int, contr=NULL, para=F, data=prepr.pupil.data)
-m.stab.plot(full.stab_mm1.tobii.full.int$summary[, -1])
-full.stab_mm1.tobii.full.int$summary
+#The function calculating stability doesn't support calculations in the model.
+#I fit the model again just to calculate the stability, adding the calculations (cubic and squared terms) directly to the dataframe
+stability.data=model.data %>% 
+  mutate(Time_squared=(Time)^2) %>% 
+  mutate(Time_cubic=(Time)^3)
+
+#fit the model again for stability, without calculations in the formula
+library(lme4)
+mm1.tobii.full.int.stab <- lmer(Both_Pupil ~ 1 + Stim_pupil_movement * Stim_species + Time + Time_minus_one + Time_squared + Time_cubic + 
+                                 Time:Stim_species + Time_squared:Stim_species + Time_cubic:Stim_species + 
+                                 Time:Stim_pupil_movement + Time_squared:Stim_pupil_movement + Time_cubic:Stim_pupil_movement +
+                                 Time:Stim_species:Stim_pupil_movement + Time_squared:Stim_species:Stim_pupil_movement + Time_cubic:Stim_species:Stim_pupil_movement +
+                                 (1 | Subject/Trial),  
+                                 data = stability.data, REML = FALSE)
+
+# Extract fixed effects coefficients from the initial model
+fixed_effects_original <- summary(mm1.tobii.full.int.stab)$coefficients
+
+# Initialize data frame to store results
+result_df <- data.frame(Effect = rownames(fixed_effects_original),
+                        Original_Estimate = fixed_effects_original[, "Estimate"],
+                        Original_SE = fixed_effects_original[, "Std. Error"],
+                        Min_Estimate = fixed_effects_original[, "Estimate"],  # Initialize with original estimates
+                        Max_Estimate = fixed_effects_original[, "Estimate"])  # Initialize with original estimates
+
+# Get levels of the random effects (Trial and Subject)
+trial_levels <- levels(as.factor(stability.data$Trial))
+subject_levels <- levels(stability.data$Subject)
+
+# Initialize a list to store model outputs
+model_outputs <- list()
+
+# Iteratively refit the model by excluding each level of the random effects (Trial and Subject)
+for (trial_level in trial_levels) {
+  for (subject_level in subject_levels) {
+    # Exclude the current levels from the dataset
+    subset_data <- subset(stability.data, Trial != trial_level | Subject != subject_level)
+    
+    # Refit the model
+    model <- lmer(Both_Pupil ~ 1 + Stim_pupil_movement * Stim_species + Time + Time_minus_one + Time_squared + Time_cubic + 
+                  Time:Stim_species + Time_squared:Stim_species + Time_cubic:Stim_species + 
+                  Time:Stim_pupil_movement + Time_squared:Stim_pupil_movement + Time_cubic:Stim_pupil_movement +
+                  Time:Stim_species:Stim_pupil_movement + Time_squared:Stim_species:Stim_pupil_movement + Time_cubic:Stim_species:Stim_pupil_movement +
+                  (1 | Subject/Trial),  
+                  data = subset_data, REML = FALSE)
+    
+    # Extract fixed effects coefficients from the model
+    fixed_effects <- summary(model)$coefficients
+    
+  # Update result data frame with min and max estimates
+    result_df$Min_Estimate <- pmin(result_df$Min_Estimate, fixed_effects[, "Estimate"], na.rm = TRUE)
+    result_df$Max_Estimate <- pmax(result_df$Max_Estimate, fixed_effects[, "Estimate"], na.rm = TRUE)
+  }
+}
+
+# Compare model outputs
+view(result_df)
+
+
+#LL: 29/05/2024; continue from here
 
 #collinearity
 xx=lmer(biom~pl.spec+z.alt, data=xdata) #fit the model as lm without interactions and squared and cubic terms
@@ -745,9 +816,16 @@ print(pairwise_comparisons) #nothing is significant?
 ```{r}
 #Stimulus Pupil Movement Plot
 
-prepr.pupil.data.bins<- prepr.pupil.data %>%
+prepr.pupil.data.plot <- prepr.pupil.data4 %>%
+  group_by(Subject, Stim_pupil_movement, Trial) %>%
+  full_join(pupil.baseline) %>% #add baseline data
+  mutate(pupil.base.corrected = Both_Pupil - median.base.pupil)%>% #subtractive baseline correction
+  ungroup()
+
+
+prepr.pupil.data.bins<- prepr.pupil.data.plot %>%
   group_by(Time, Stim_pupil_movement) %>%
-  summarise(mean.pupil.corrected.binned = mean(pupil.base.corrected, na.rm = TRUE), sd.pupil.corrected.binned= sd(Both_Pupil, na.rm = TRUE), se.pupil.corrected.binned = sd(pupil.base.corrected, na.rm = TRUE) / sqrt(length(pupil.base.corrected)))
+  summarise(mean.pupil.corrected.binned = mean(pupil.base.corrected, na.rm = TRUE), sd.pupil.corrected.binned= sd(pupil.base.corrected, na.rm = TRUE), se.pupil.corrected.binned = sd(pupil.base.corrected, na.rm = TRUE) / sqrt(length(pupil.base.corrected)))
 
 
 
@@ -757,7 +835,8 @@ pupil.plot <- ggplot(data = prepr.pupil.data.bins, aes(x = Time, y = mean.pupil.
   xlab("Time (in s)") +
   geom_point(aes(x = Time, y = mean.pupil.corrected.binned, color = Stim_pupil_movement), alpha = 0.3, size = 0.5) +
   geom_ribbon(aes(ymin = mean.pupil.corrected.binned - se.pupil.corrected.binned, ymax = mean.pupil.corrected.binned + se.pupil.corrected.binned, fill = Stim_pupil_movement), alpha = 0.6) +
-    xlim(0, 5.8) +
+    ylim(-0.2, 0.3) +
+    xlim(0, 5.25) +
     theme_bw()+
   scale_color_brewer(palette="Dark2")+
   scale_fill_brewer(palette="Dark2")+
@@ -783,7 +862,7 @@ ggsave(pupil.plot, filename = "graphs/preprocessed.baseline.corrected.pupil.plot
 ```{r}
 #Stimulus Species Plot
 
-prepr.pupil.data.bins.species<- prepr.pupil.data %>%
+prepr.pupil.data.bins.species<- prepr.pupil.data.plot %>%
   group_by(Time, Stim_species) %>%
   summarise(mean.pupil.corrected.binned = mean(pupil.base.corrected, na.rm = TRUE), sd.pupil.corrected.binned= sd(Both_Pupil, na.rm = TRUE), se.pupil.corrected.binned = sd(pupil.base.corrected, na.rm = TRUE) / sqrt(length(pupil.base.corrected)))
 
@@ -817,3 +896,32 @@ pupil.species.plot
 #Save the Stimulus Pupil Movement plot
 ggsave(pupil.species.plot, filename = "graphs/preprocessed.baseline.corrected.pupil.species.plot.png", height = 5, width = 8, scale = 0.7, dpi=1200)
 ```
+
+```{r}
+#Barplot
+prepr.pupil.data.barplot <- prepr.pupil.data4 %>%
+  group_by(Subject, Trial, Stim_pupil_movement, Stim_species) %>%
+  full_join(pupil.baseline) %>% #add baseline data
+  mutate(pupil.base.corrected = Both_Pupil - median.base.pupil) %>% #subtractive baseline correction
+  ungroup() %>% 
+  group_by(Stim_pupil_movement, Stim_species) %>% 
+  summarise(mean_base_corrected_pupil=mean(pupil.base.corrected, na.rm=TRUE), sd=sd(pupil.base.corrected, na.rm=TRUE)) %>% 
+  mutate(Stim_pupil_movement=as.factor(Stim_pupil_movement))
+  
+
+library(ggplot2)
+
+ggplot(prepr.pupil.data.barplot, aes(x = Stim_species, y = mean_base_corrected_pupil, fill = Stim_pupil_movement)) +
+  geom_bar(stat = "identity", position = "dodge", color = "black") +
+  #geom_errorbar(aes(ymin = mean_base_corrected_pupil - sd, ymax = mean_base_corrected_pupil + sd),
+ #               width = 0.2, position = position_dodge(0.9)) +
+ # geom_point(aes(y = mean_base_corrected_pupil, color = Stim_pupil_movement), 
+  #           position = position_dodge(0.9), size = 3) +
+  labs(x = "Stim Species", y = "Mean Base Corrected Pupil") +
+  theme_minimal() +
+  scale_color_manual(values = c("black", "white"), guide = FALSE) +
+  guides(fill = guide_legend(title = "Stim Pupil Movement"))
+
+
+```
+
