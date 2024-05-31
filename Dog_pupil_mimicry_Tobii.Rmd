@@ -340,6 +340,22 @@ length(all.data.toi.trials.barney$TOI)
 
 #which videos did the dog see?
 levels(as.factor(all.data.toi.trials.barney$TOI)) 
+
+
+# % tracked gaze for each dog (on average, on their trials, their fixations were detected for the following % of time):
+##Barney 
+mean(tracked.gaze.data.red.barney$percent_tracked_gaze) #64.44
+##Jazz
+mean(tracked.gaze.data.red.jazz$percent_tracked_gaze) #1.53
+##Kaije
+mean(tracked.gaze.data.red.kaije$percent_tracked_gaze) #68.85
+##Messi
+mean(tracked.gaze.data.red.messi$percent_tracked_gaze) #62.18
+##Noodle
+mean(tracked.gaze.data.red.noodle$percent_tracked_gaze) #50.87
+##Pepe
+mean(tracked.gaze.data.red.pepe$percent_tracked_gaze) #53.46
+
 ```
 
 ##calculate % tracked (i.e., detected) gaze for each trial. Using the data with the Tobii "Fixation" gaze filter and the Total duration of fixations

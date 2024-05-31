@@ -50,6 +50,52 @@ levels(as.factor(all.data$Presented_Media_name))
 levels(as.factor(all.data$Presented_Stimulus_name))
 ```
 
+
+```{r}
+# Calculate mean calibration accuracy per each dog 
+
+## Pepe
+pepe_data <- all.data[all.data$Participant_name == "Pepe", ]
+#Select average calibration accuracy in mm from the filtered dataframe
+pepe_cal_data <- pepe_data[, 17]
+summary(pepe_cal_data) #mean 1799 mm
+
+# Barney
+barney_data <- all.data[all.data$Participant_name == "Barney", ]
+#Select average calibration accuracy in mm from the filtered dataframe
+barney_cal_data <- barney_data[, 17]
+summary(barney_cal_data) # mean  802.7 mm
+
+# Messi
+messi_data <- all.data[all.data$Participant_name == "Messi", ]
+#Select average calibration accuracy in mm from the filtered dataframe
+messi_cal_data <- messi_data[, 17]
+summary(messi_cal_data) # mean 1313 mm
+
+# Noodle
+noodle_data <- all.data[all.data$Participant_name == "Noodle", ]
+#Select average calibration accuracy in mm from the filtered dataframe
+noodle_cal_data <- noodle_data[, 17]
+summary(noodle_cal_data) # 578 mm
+
+# Kaije
+kaije_data <- all.data[all.data$Participant_name == "Kaije", ]
+#Select average calibration accuracy in mm from the filtered dataframe
+kaije_cal_data <- kaije_data[, 17]
+summary(kaije_cal_data)
+
+# Jazz
+jazz_data <- all.data[all.data$Participant_name == "Jazz", ]
+#Select average calibration accuracy in mm from the filtered dataframe
+jazz_cal_data <-jazz_data[, 17]
+summary(jazz_cal_data)
+
+
+
+
+
+```
+
 ## Subsetting the data to only the time in which videos or grey screens were presented
 
 
