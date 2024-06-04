@@ -698,6 +698,21 @@ mm1.tobii.red.int=lmer(Both_Pupil ~ 1 + Time + Time_minus_one + I(Time^2)+ I(Tim
 library(lmerTest)
 as.data.frame(anova(mm1.tobii.red.int, mm1.tobii.full.int, test="F")) #the interaction is significant (Chisq = 33.36, df = 11, P < .001)
 ```
+
+
+```{r}
+#to get the pairwise comparison between Stim species human and dog, relevel the factor Stim species and fit the model again
+model.data$Stim_species.rel<-relevel(model.data$Stim_species, ref="dog")
+mm1.tobii.full.int.reml.relev = lmerTest::lmer(Both_Pupil ~ 1 + Stim_pupil_movement*Stim_species.rel + Time + Time_minus_one + I(Time^2)+ I(Time^3) + 
+                  Time:Stim_species.rel + I(Time^2):Stim_species.rel + I(Time^3):Stim_species.rel + 
+                  Time:Stim_pupil_movement + I(Time^2):Stim_pupil_movement + I(Time^3):Stim_pupil_movement +
+                  Time:Stim_species.rel:Stim_pupil_movement + I(Time^2):Stim_species.rel:Stim_pupil_movement + I(Time^3):Stim_species.rel:Stim_pupil_movement +
+                  (1 | Subject/Trial),  
+                  data=model.data, REML=T)
+
+round(summary(mm1.tobii.full.int.reml.relev)$coefficients, 3)
+```
+
 ```{r}
 #fit full model without interaction
 # mm1.tobii.full<-lmer(Both_Pupil ~ 1 + Stim_pupil_movement + Stim_species + Time + Time_minus_one + I(Time^2)+ I(Time^3) + 
@@ -921,7 +936,7 @@ prepr.pupil.data.barplot <- prepr.pupil.data4 %>%
   mutate(pupil.base.corrected = Both_Pupil - median.base.pupil) %>% #subtractive baseline correction
   ungroup() %>% 
   group_by(Stim_pupil_movement, Stim_species) %>% 
-  summarise(mean_base_corrected_pupil=mean(pupil.base.corrected, na.rm=TRUE), sd=sd(pupil.base.corrected, na.rm=TRUE)) %>% 
+  summarise(mean_base_corrected_pupil=mean(pupil.base.corrected, na.rm=TRUE), sd=sd(pupil.base.corrected, na.rm=TRUE), se=sd(pupil.base.corrected, na.rm=TRUE)/sqrt(length(pupil.base.corrected))) %>% 
   mutate(Stim_pupil_movement=as.factor(Stim_pupil_movement))
   
 
@@ -933,14 +948,30 @@ barplot<-ggplot(prepr.pupil.data.barplot, aes(x = Stim_species, y = mean_base_co
  #               width = 0.2, position = position_dodge(0.9)) +
  # geom_point(aes(y = mean_base_corrected_pupil, color = Stim_pupil_movement), 
   #           position = position_dodge(0.9), size = 3) +
-  labs(x = "Stim Species", y = "Mean Base Corrected Pupil") +
+  labs(x = "Species shown in the stimulus", y = "Mean Baseline Corrected Pupil") +
   theme_minimal() +
   scale_color_manual(values = c("black", "white"), guide = FALSE) +
   guides(fill = guide_legend(title = "Stim Pupil Movement"))
 barplot
 
+
+#attempt 2
+barplot <- ggplot(prepr.pupil.data.barplot, aes(x = Stim_species, y = mean_base_corrected_pupil, fill = Stim_pupil_movement)) +
+  geom_bar(stat = "identity", position = "dodge", color = "black") +
+  geom_errorbar(aes(ymin = mean_base_corrected_pupil - se, ymax = mean_base_corrected_pupil + se), #error bars show standard error
+  width = 0.2, position = position_dodge(0.9)) +
+  labs(x = "Stimuli species", y = "Mean Baseline Corrected Pupil Size") +
+  theme_classic() +
+  coord_cartesian(ylim = c(0,0.16))+
+  scale_color_brewer(palette="Dark2")+
+  scale_fill_brewer(palette="Dark2")+
+  #scale_fill_manual(values = c("white", "black"), guide = FALSE) +
+  guides(fill = guide_legend(title = "Stimuli pupil movement"))
+
+barplot
+
 ```
 ```{r}
 #Save the Average barplot
-ggsave(barplot, filename = "graphs/barplot.plot.png", height = 5, width = 8, scale = 0.7, dpi=1200)
+ggsave(barplot, filename = "graphs/barplot.plot_cols.png", height = 5, width = 8, scale = 0.7, dpi=1200)
 ```
