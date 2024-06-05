@@ -215,7 +215,6 @@ which(all.data$Recording=="Recording263" & (all.data$TOI=="b07-dilating" | all.d
 which(all.data$Recording=="Recording264" & (all.data$TOI=="b01-constr" | 
 all.data$TOI=="b04-constr")),
 which(all.data$Recording=="Recording261" & (all.data$TOI=="d02-constr" | all.data$TOI=="d12-constr"| all.data$TOI=="h14-dilating"| all.data$TOI=="d14-constr")),
-#which(all.data$Recording=="Recording310" & (all.data$TOI=="b00-dilating" | all.data$TOI=="b15-constr"| all.data$TOI=="d14-dilating" | all.data$TOI=="h07-constr" | all.data$TOI=="h13-constr")),
 which(all.data$Recording=="Recording133" & (all.data$TOI=="b07-dilating" | all.data$TOI=="d04-dilating"| all.data$TOI=="d15-constr")),
 which(all.data$Recording=="Recording146" & (all.data$TOI=="b07-constr" | 
 all.data$TOI=="d05-constr")),
@@ -524,7 +523,7 @@ write_xlsx(to.be.repeated.nova.red, "./output/to_be_repeated_nova.xlsx")
 
 ##import the preprocessed pupillometry data 
 ```{r}
-#Tobii gaze fixation and pupil noise reduction filters applied to the data. Then, data pre-processed using the physiodata toolbox, using the default settings. Then data resampled to 1 Hz
+#Tobii gaze fixation and pupil noise reduction filters applied to the data. Then, data pre-processed using the physiodata toolbox, using the default settings. Then data resampled to 10 Hz
 #Variable Both_pupil contains resampled pupil size in mm for both eyes
 library(readxl)
 
