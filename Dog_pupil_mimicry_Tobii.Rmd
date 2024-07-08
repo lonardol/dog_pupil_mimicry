@@ -88,11 +88,11 @@ which(all.data$Recording=="Recording329" & all.data$TOI=="d00-constr"),
 which(all.data$Recording=="Recording282" & all.data$TOI=="d13-constr"),
 which(all.data$Recording=="Recording342" & all.data$TOI=="b13-constr"),
 which(all.data$Recording=="Recording381" & all.data$TOI=="h13-constr"),
-which(all.data$Recording=="Recording394" & all.data$TOI=="d12-dilating"), #added this and lines below on
-which(all.data$Recording=="Recording367" & all.data$TOI=="h05-dilating"), #10/04
+which(all.data$Recording=="Recording394" & all.data$TOI=="d12-dilating"), 
+which(all.data$Recording=="Recording367" & all.data$TOI=="h05-dilating"), 
 which(all.data$Recording=="Recording392" & all.data$TOI=="b08-dilating"),
 which(all.data$Recording=="Recording375" & (all.data$TOI=="d01-dilating" |
-all.data$TOI=="b00-dilating")),                                           #until here
+all.data$TOI=="b00-dilating")),                                           
 which(all.data$Recording=="Recording51" & (all.data$TOI=="d14-constr" |
 all.data$TOI=="h07-dilating")),
 which(all.data$Recording=="Recording66" & (all.data$TOI=="d01-constr" |
@@ -1024,4 +1024,70 @@ barplot.human.nv
 ```{r}
 #Save the Average barplot
 ggsave(barplot.human.nv, filename = "graphs/barplot.plot_humans_negative_values.png", height = 5, width = 8, scale = 0.7, dpi=1200)
+```
+
+##Analyse looking times 
+```{r}
+str(tracked.gaze.data)
+
+lt.data<-tracked.gaze.data %>% 
+  filter(Participant!="jazz") %>% 
+  droplevels() %>% 
+  mutate(stim_species=factor(ifelse(startsWith(TOI, "d"), "dog",
+                              ifelse(startsWith(TOI, "h"), "human",
+                              ifelse(startsWith(TOI, "b"), "bonobo", "NA")))))
+
+str(lt.data)
+levels(as.factor(lt.data$Participant))
+levels(as.factor(lt.data$TOI))
+table(lt.data$Participant, lt.data$TOI)
+levels(lt.data$stim_species)
+table(lt.data$Participant, lt.data$stim_species)
+table(lt.data$condition, lt.data$stim_species)
+table(lt.data$Participant, lt.data$condition)
+
+hist(lt.data$Total_duration_of_fixations)
+range(lt.data$Total_duration_of_fixations)
+#checks on the data
+# sum(is.na(lt.data$condition))
+# sum(is.na(lt.data$Total_duration_of_fixations))
+# summary(lt.data$Total_duration_of_fixations)
+# summary(lt.data$stim_species)
+# lt.data$Total_duration_of_fixations <- as.numeric(lt.data$Total_duration_of_fixations)
+# unique(lt.data$Total_duration_of_fixations[is.na(as.numeric(lt.data$Total_duration_of_fixations))])
+
+#Plot of looking times grouped by stim_species
+agg.lt.data <- lt.data %>%
+  group_by(stim_species) %>%
+  summarise(average_fix_duration = mean(Total_duration_of_fixations, na.rm = TRUE)) %>% 
+  mutate(stim_species2= jitter(as.numeric(as.factor(agg.lt.data$stim_species), amount = .0001))) %>% 
+  mutate(stim_species=as.factor(stim_species))
+
+
+
+# Create the bar plot
+library(ggplot2)
+library(RColorBrewer)
+
+lt_plot<-ggplot(data = lt.data, aes (x=stim_species, y=Total_duration_of_fixations, color=stim_species))+
+  geom_boxplot(fill=brewer.pal(8,"Dark2")[1:3], alpha=.8)+
+  geom_jitter(width = 0.2, height = 0)+
+  theme_classic()+
+  scale_color_brewer(palette = "Dark2")+
+  xlab("Stimulus species")+
+  ylab("Duration of fixations (ms)")+
+  theme(legend.position = "none",
+  axis.text.x = element_text(size = 14),  # Increase font size of x-axis ticks
+  axis.text.y = element_text(size = 14),  # Increase font size of y-axis ticks)
+  axis.title = element_text(size = 18))
+
+lt_plot
+
+```
+
+
+#save plot
+
+```{r}
+ggsave(lt_plot, filename = "graphs/looking_times_plot.png", width = 8, height = 7, scale = 0.8)
 ```
