@@ -1146,7 +1146,7 @@ null_looking_time<-lmer(Total_duration_of_fixations ~  z.trial+ (1+(stim_species
 anova(mm_looking_time, null_looking_time, test="Chisq") #full- null comparison not significant (LRT:1.829, Df=15, P= 0.872)
 #neither stimulus species nor condition (stimulus pupil dilating or constricting) affected the dogs' looking time
 
-#anova(mm_looking_time, mm_looking_time_red, test="Chisq")#interaction not significant (LRT=0.618  Df=15, P=0.734)
+anova(mm_looking_time, mm_looking_time_red, test="Chisq")#interaction not significant (LRT=0.618  Df=15, P=0.734)
 
 ```
 
