@@ -1026,7 +1026,7 @@ barplot.human.nv
 ggsave(barplot.human.nv, filename = "graphs/barplot.plot_humans_negative_values.png", height = 5, width = 8, scale = 0.7, dpi=1200)
 ```
 
-##Analyse looking times 
+##Plot looking times 
 ```{r}
 str(tracked.gaze.data)
 
@@ -1064,7 +1064,6 @@ agg.lt.data <- lt.data %>%
   mutate(stim_species=as.factor(stim_species))
 
 
-
 # Create the bar plot
 library(ggplot2)
 library(RColorBrewer)
@@ -1086,8 +1085,68 @@ lt_plot
 ```
 
 
-#save plot
-
 ```{r}
+#save plot
 ggsave(lt_plot, filename = "graphs/looking_times_plot.png", width = 8, height = 7, scale = 0.8)
 ```
+##Analyse looking times
+```{r}
+#add trial number info to the dataframe
+
+#renaming of variables, only needs to be done once
+# prepr.pupil.data2<-prepr.pupil.data2 %>% 
+#   rename(subject=Subject) %>% 
+#   rename(trial=Trial)
+
+lt.data.model<-lt.data %>% 
+  mutate(subject=Participant) %>% 
+  separate(Recording, into = c("Recording", "Recording.nr"), sep = "(?<=Recording)(?=[0-9])", convert = TRUE) %>%
+  group_by(subject, Recording.nr, Start_of_interval, TOI, condition, stim_species, Total_duration_of_fixations) %>% 
+  summarise(trial=n()) %>% 
+  group_by(subject) %>% 
+  arrange(Recording.nr, Start_of_interval) %>% 
+  summarise(trial=row_number(),
+            subject=subject,
+            Recording.nr=Recording.nr,
+            TOI=TOI,
+            Start_of_interval=Start_of_interval,
+            condition=condition,
+            stim_species=stim_species,
+            Total_duration_of_fixations=Total_duration_of_fixations)
+```
+
+
+```{r}
+#manual dummy coding
+#stim_species
+lt.data.model$stim_species_dummy1.c=scale(as.numeric(lt.data.model$stim_species==levels(as.factor(lt.data.model$stim_species))[2]), center=TRUE, scale= FALSE)
+lt.data.model$stim_species_dummy2.c=scale(as.numeric(lt.data.model$stim_species==levels(as.factor(lt.data.model$stim_species))[3]), center=TRUE, scale=FALSE)
+#condition
+lt.data.model$condition_dummy1.c=scale(as.numeric(lt.data.model$condition==levels(as.factor(lt.data.model$condition))[2]), center=TRUE, scale=FALSE)
+
+#standardise trial number
+lt.data.model$z.trial<-scale(lt.data.model$trial)
+
+#if needed to transform dep. variable: lt.data$sqrt_dwell_time<-sqrt(lt.data$dwell_time)
+
+#fittig full LMM
+library(lme4)
+
+mm_looking_time<-lmer(Total_duration_of_fixations ~ stim_species*condition+ z.trial+ (1+(stim_species_dummy1.c+stim_species_dummy2.c)*condition_dummy1.c+z.trial||subject), REML=FALSE, data=lt.data.model)
+
+round(summary(mm_looking_time)$coefficients,3)
+
+mm_looking_time_red<-lmer(Total_duration_of_fixations ~ stim_species + condition+ z.trial+ (1+(stim_species_dummy1.c+stim_species_dummy2.c)*condition_dummy1.c+z.trial||subject), REML=FALSE, data=lt.data.model)
+
+#full-null model comparison
+
+null_looking_time<-lmer(Total_duration_of_fixations ~  z.trial+ (1+(stim_species_dummy1.c+stim_species_dummy2.c)*condition_dummy1.c+z.trial||subject), REML=FALSE, data=lt.data.model)
+
+
+anova(mm_looking_time, null_looking_time, test="Chisq") #full- null comparison not significant (LRT:1.829, Df=15, P= 0.872)
+#neither stimulus species nor condition (stimulus pupil dilating or constricting) affected the dogs' looking time
+
+#anova(mm_looking_time, mm_looking_time_red, test="Chisq")#interaction not significant (LRT=0.618  Df=15, P=0.734)
+
+```
+
