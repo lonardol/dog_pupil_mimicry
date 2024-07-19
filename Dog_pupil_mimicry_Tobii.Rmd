@@ -28,7 +28,7 @@ droplevels()
 
 ```{r}
 #Nova's data
-nova.data<-read_tsv("./data/LearningMetricsAOI_Interval_Nova.tsv") %>%  
+nova.data<-read_tsv("./data/LearningMetricsAOI_Interval_Nova_wReruns.tsv") %>%  
   mutate(Recording=as.factor(Recording)) %>% 
   mutate(Participant=as.factor(Participant)) %>% 
   mutate(Timeline=as.factor(Timeline))
@@ -272,7 +272,7 @@ all.data.toi.trials<-all.data.toi %>%
 ```{r}
 str(nova.data.toi)
 levels(as.factor(nova.data.toi$Recording))
-table(nova.data.toi$Participant, nova.data.toi$Recording) #one trial missing from her 11th session
+table(nova.data.toi$Participant, nova.data.toi$Recording) 
 levels(as.factor(nova.data.toi$TOI))
 levels(as.factor(nova.data.toi$Timeline))
 nova.data.toi$TOI[nova.data.toi$Timeline=="Nova 11th session"] #d08-constr missing
@@ -283,7 +283,7 @@ nova.data.toi.trials<-nova.data.toi %>%
   filter(!grepl("Grey screen", TOI)) %>% 
 #mutate(N_trials_collected=count(Participant)) alternative to what is below
   group_by(Participant) %>% 
-  summarise(N_trials_collected=n()) #Nova has 95 trials
+  summarise(N_trials_collected=n()) #Nova has 119 trials
 ```
 
 ##Individual checks to see if there are repeated trials
